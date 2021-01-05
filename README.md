@@ -22,7 +22,7 @@ Instructions to get a copy of the project up and running (on a local and/or
 remote machine) and for development purposes.
 
 ```
-~$ git clone https://github.com/stelong/gpytGPE.git
+git clone https://github.com/stelong/gpytGPE.git
 ```
 
 ---
@@ -35,13 +35,18 @@ remote machine) and for development purposes.
 ### Installing
 
 ```
-~$ cd gpytGPE/
+cd gpytGPE/
+```
 
-[optional]~$ python3 -m venv venv
-[optional]~$ source venv/bin/activate
-[optional]~$ pip install --upgrade pip setuptools wheel
+(optional)
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip setuptools wheel
+```
 
-~$ pip install .
+```
+pip install .
 ```
 
 ---
