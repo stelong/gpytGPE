@@ -13,69 +13,52 @@ This library contains the tools needed for constructing a univariate Gaussian pr
 
 **Development year(s)**: `2020-2021`
 
-**Author(s)**: [stelong](https://github.com/stelong)
+**Author**: [stelong](https://github.com/stelong)
 
 ---
 ## Getting Started
 
 Instructions to get a copy of the project up and running (on a local and/or 
-remote machine) and for development and testing purposes.
+remote machine) and for development purposes.
 
 ```
-command
-```
-
-### Prerequisites
-
-Instructions to get the required dependencies for the project.
-
-```
-command
-```
-
-### Installing
-
-Notes about how to install the project.
-
-```
-command
-```
-
-### Testing
-
-Notes about how to run tests.
-
-```
-command
-```
-
-### Deployment
-
-Notes about how to deploy the project on a live system.
-
-```
-command
+~$ git clone https://github.com/stelong/gpytGPE.git
 ```
 
 ---
-## Building tools
+### Prerequisites
 
-* [Tool/library/platform](link) - Reason it has been used for
-* [Tool/library/platform](link) - Reason it has been used for
-* ...
+* [Python3](https://www.python.org/) - Reason it has been used for
+* [virtualenv](https://pypi.org/project/virtualenv/) (optional)
+
+---
+### Installing
+
+```
+~$ cd gpytGPE/
+
+[optional]~$ python3 -m venv venv
+[optional]~$ source venv/bin/activate
+[optional]~$ pip install --upgrade pip setuptools wheel
+
+~$ pip install .
+```
+
+---
+### Usage
+
+Explain here.
+
 
 ---
 ## Contributing
 
-This project is not actively maintained and issues or pull requests may be 
-ignored. |
-Any contribution is welcome. Please read [CONTRIBUTING.md](link) for 
-details on how to submit pull requests.
+Stefano Longobardi is the only maintainer. Any contribution is welcome.
 
 ---
 ## License
 
-This project is licensed under the X license.
+This project is licensed under the MIT license.
 Please refer to the [LICENSE.md](LICENSE.md) file for details.
 
 ---
