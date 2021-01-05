@@ -27,7 +27,7 @@ setup(
     url='https://github.com/stelong/gpytGPE',
     author="Stefano Longobardi",
     author_email="stefano.longobardi.8@gmail.com",
-    license='',
+    license='MIT',
     description='A univariate Gaussian Process Emulator (GPE) implementation around GPyTorch',
     long_description=readme,
     long_description_content_type="text/markdown",
