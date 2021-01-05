@@ -18,9 +18,6 @@ This library contains the tools needed for constructing a univariate Gaussian pr
 ---
 ## Getting Started
 
-Instructions to get a copy of the project up and running (on a local and/or 
-remote machine) and for development purposes.
-
 ```
 git clone https://github.com/stelong/gpytGPE.git
 ```
@@ -28,7 +25,7 @@ git clone https://github.com/stelong/gpytGPE.git
 ---
 ### Prerequisites
 
-* [Python3](https://www.python.org/) - Reason it has been used for
+* [Python3](https://www.python.org/) (>=3.6)
 * [virtualenv](https://pypi.org/project/virtualenv/) (optional)
 
 ---
@@ -38,12 +35,13 @@ git clone https://github.com/stelong/gpytGPE.git
 cd gpytGPE/
 ```
 
-(optional)
+(optional) {
 ```
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
 ```
+}
 
 ```
 pip install .
