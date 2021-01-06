@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+# credits: https://github.com/Bjarten/early-stopping-pytorch
+
 
 class EarlyStopping:
     def __init__(self, patience, savepath):
