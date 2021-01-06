@@ -23,32 +23,29 @@ git clone https://github.com/stelong/gpytGPE.git
 ```
 
 ---
-### Prerequisites
+## Prerequisites
 
 * [Python3](https://www.python.org/) (>=3.6)
 * [virtualenv](https://pypi.org/project/virtualenv/) (optional)
 
 ---
-### Installing
+## Installing
 
 ```
 cd gpytGPE/
 ```
-
-(optional) {
 ```
+# (this block is optional)
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
 ```
-}
-
 ```
 pip install .
 ```
 
 ---
-### Usage
+## Usage
 
 Explain here.
 
