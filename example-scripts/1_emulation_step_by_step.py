@@ -15,7 +15,7 @@ from gpytGPE.utils.plotting import plot_dataset
 LEARNING_RATE = 0.1
 MAX_EPOCHS = 1000
 METRIC = "R2Score"
-N_RESTARTS = 1
+N_RESTARTS = 10
 PATIENCE = 20
 SEED = 8
 
@@ -74,7 +74,7 @@ def main():
         max_epochs,
         patience,
         savepath=path_out,
-        save_losses=False,
+        save_losses=True,
         watch_metric=metric,
     )
 

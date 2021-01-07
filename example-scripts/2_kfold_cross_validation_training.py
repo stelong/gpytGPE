@@ -13,7 +13,7 @@ FOLD = 5
 LEARNING_RATE = 0.1
 MAX_EPOCHS = 1000
 METRIC = "R2Score"
-N_RESTARTS = 1
+N_RESTARTS = 10
 PATIENCE = 20
 SEED = 8
 
@@ -119,7 +119,7 @@ def main():
     # GPE training using the entire dataset
     # ================================================================
     best_epoch_list = [results[i][1] for i in range(fold)]
-    n_epochs = int(np.round(np.mean(best_epoch_list), 0))
+    n_epochs = int(np.around(np.mean(best_epoch_list), decimals=0))
 
     np.savetxt(path_out + "X_train.txt", X, fmt="%.6f")
     np.savetxt(path_out + "y_train.txt", y, fmt="%.6f")
@@ -133,7 +133,7 @@ def main():
         max_epochs=n_epochs,
         patience=n_epochs,
         savepath=path_out,
-        save_losses=False,
+        save_losses=True,
         watch_metric=metric,
     )
     emul.save()
