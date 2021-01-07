@@ -58,11 +58,15 @@ cd example-scripts/
 ```
 To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `example-scripts/data/`.
 
-To emulate feature *1* (first column of matrix *Y*), we will replace `IDX` with `0` in the command below:
+To emulate feature #1 (first column of matrix *Y*), we will replace `IDX` with `0` in the command below:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/folder/
 ```
-More in general, to emulate feature *j* we run the command with `j-1`. Notice that in our specific case, `/absolute/path/to/input/` is `data/`.
+More in general, to emulate feature #j we run the command with `j-1`. Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/folder/IDX/` and filled with the trained emulator object `gpe.pth` and other files.
+
+This first script guides you through common steps (0--7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. If run using default settings, one fifth of the dataset will be used as validation set and the emulator will be trained on the remaining four fifth by validation loss.
+
+
 
 ---
 ## Contributing
