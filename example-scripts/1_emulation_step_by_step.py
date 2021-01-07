@@ -22,7 +22,7 @@ SEED = 8
 
 def main():
     # ================================================================
-    # Making the code reproducible
+    # (0) Making the code reproducible
     # ================================================================
     seed = SEED
     np.random.seed(seed)
@@ -30,7 +30,7 @@ def main():
     torch.manual_seed(seed)
 
     # ================================================================
-    # Loading and visualising dataset
+    # (1) Loading and visualising dataset
     # ================================================================
     path_in = sys.argv[1].rstrip("/") + "/"
     X = np.loadtxt(path_in + "X.txt", dtype=float)
@@ -41,7 +41,7 @@ def main():
     plot_dataset(X, Y, xlabels, ylabels)
 
     # ================================================================
-    # Building example training and validation datasets
+    # (2) Building example training and validation datasets
     # ================================================================
     idx_feature = sys.argv[2]
     print(f"\n{ylabels[int(idx_feature)]} feature selected for emulation.")
@@ -53,7 +53,7 @@ def main():
     )
 
     # ================================================================
-    # Training GPE
+    # (3) Training GPE
     # ================================================================
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     lr = LEARNING_RATE
@@ -79,22 +79,22 @@ def main():
     )
 
     # ================================================================
-    # Saving trained GPE
+    # (4) Saving trained GPE
     # ================================================================
     filename = "gpe.pth"
     emul.save(filename=filename)
 
     # ================================================================
-    # Loading already trained GPE
+    # (5) Loading already trained GPE
     # ================================================================
-    # NOTE: you need exactely the same training dataset used previously
+    # NOTE: you need exactely the same training dataset used in (3)
     # ================================================================
     emul = GPEmul.load(path_out, X_train, y_train, filename=filename)
 
     # ================================================================
-    # Testing trained GPE at new input points (inference)
+    # (6) Testing trained GPE at new input points (inference)
     # ================================================================
-    # NOTE: we will use the validation dataset as an example
+    # NOTE: we will use the validation dataset used in (3) as an example
     # ================================================================
     X_test = X_val
     y_test = y_val
@@ -104,7 +104,7 @@ def main():
     print(f"\nAccuracy on testing dataset: R2Score = {r2s:.6f}.")
 
     # ================================================================
-    # Plotting predictions vs observations
+    # (7) Plotting predictions vs observations
     # ================================================================
     height = 9.36111
     width = 5.91667
