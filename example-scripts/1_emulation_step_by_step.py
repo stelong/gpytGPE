@@ -65,6 +65,11 @@ def main():
     path_out = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
     Path(path_out).mkdir(parents=True, exist_ok=True)
 
+    np.savetxt(path_out + "X_train.txt", X_train, fmt="%.6f")
+    np.savetxt(path_out + "y_train.txt", y_train, fmt="%.6f")
+    np.savetxt(path_out + "X_val.txt", X_val, fmt="%.6f")
+    np.savetxt(path_out + "y_val.txt", y_val, fmt="%.6f")
+
     emul = GPEmul(X_train, y_train, device, learn_noise=False, scale_data=True)
     emul.train(
         X_val,
