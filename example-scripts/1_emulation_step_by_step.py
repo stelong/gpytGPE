@@ -74,7 +74,7 @@ def main():
         max_epochs,
         patience,
         savepath=path_out,
-        save_losses=True,
+        save_losses=False,
         watch_metric=metric,
     )
 
