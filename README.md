@@ -55,12 +55,14 @@ pip install .
 
 ```
 cd example-scripts/
+```
+To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `example-scripts/data/`.
 
+To emulate feature 1 (first column of matrix `Y`), we will replace `IDX` with `0` in the command below:
 ```
-To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files as: `xlabels.txt` and `ylabels.txt`. An example dataset is already provided in `example-scripts/data/`.
+python3 1_emulation_step_by_step.py /absolute/path/to/data/ IDX /absolute/path/to/output/folder/
 ```
-python3 1_emulation_step_by_step.py /path/to/input/data/ IDX /path/to/output/folder/
-```
+More in general, to emulate feature j we run the command with (j-1).
 
 ---
 ## Contributing
