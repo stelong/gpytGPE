@@ -53,6 +53,14 @@ pip install .
 ---
 ## Usage
 
+```
+cd example-scripts/
+
+```
+To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files as: `xlabels.txt` and `ylabels.txt`. An example dataset is already provided in `example-scripts/data/`.
+```
+python3 1_emulation_step_by_step.py /path/to/input/data/ IDX /path/to/output/folder/
+```
 
 ---
 ## Contributing
