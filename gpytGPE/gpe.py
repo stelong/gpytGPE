@@ -13,18 +13,18 @@ from gpytGPE.utils.preprocessing import Scaler
 # default kwargs:
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEVICE_LOAD = torch.device("cpu")
+FILENAME = "gpe.pth"
 LEARN_NOISE = False
-SCALE_DATA = True
 LEARNING_RATE = 0.1
 MAX_EPOCHS = 1000
+METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
+N_DRAWS = 1000
 N_RESTARTS = 10
 PATIENCE = 20
 SAVEPATH = "./"
 SAVE_LOSSES = False
-METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
+SCALE_DATA = True
 WATCH_METRIC = "R2Score"
-FILENAME = "gpe.pth"
-N_DRAWS = 1000
 
 
 class ExactGPModel(gpytorch.models.ExactGP):
