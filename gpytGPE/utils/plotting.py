@@ -226,5 +226,4 @@ def plot_dataset(Xdata, Ydata, xlabels, ylabels, color="C0"):
             axis.set_ylabel(ylabels[i // in_dim])
     plt.suptitle("Sample dimension = {} points".format(sample_dim))
     plt.show()
-    # plt.savefig('X_vs_Y.png', bbox_inches='tight', dpi=300)
     return
