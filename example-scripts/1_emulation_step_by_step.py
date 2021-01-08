@@ -12,11 +12,6 @@ from gpytGPE.utils.design import read_labels
 from gpytGPE.utils.metrics import R2Score
 from gpytGPE.utils.plotting import plot_dataset
 
-LEARNING_RATE = 0.1
-MAX_EPOCHS = 1000
-METRIC = "R2Score"
-N_RESTARTS = 10
-PATIENCE = 20
 SEED = 8
 
 
@@ -32,12 +27,12 @@ def main():
     # ================================================================
     # (1) Loading and visualising dataset
     # ================================================================
-    path_in = sys.argv[1].rstrip("/") + "/"
-    X = np.loadtxt(path_in + "X.txt", dtype=float)
-    Y = np.loadtxt(path_in + "Y.txt", dtype=float)
+    loadpath = sys.argv[1].rstrip("/") + "/"
+    X = np.loadtxt(loadpath + "X.txt", dtype=float)
+    Y = np.loadtxt(loadpath + "Y.txt", dtype=float)
 
-    xlabels = read_labels(path_in + "xlabels.txt")
-    ylabels = read_labels(path_in + "ylabels.txt")
+    xlabels = read_labels(loadpath + "xlabels.txt")
+    ylabels = read_labels(loadpath + "ylabels.txt")
     plot_dataset(X, Y, xlabels, ylabels)
 
     # ================================================================
@@ -55,46 +50,29 @@ def main():
     # ================================================================
     # (3) Training GPE
     # ================================================================
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    lr = LEARNING_RATE
-    max_epochs = MAX_EPOCHS
-    metric = METRIC
-    n_restarts = N_RESTARTS
-    patience = PATIENCE
+    savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
+    Path(savepath).mkdir(parents=True, exist_ok=True)
 
-    path_out = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
-    Path(path_out).mkdir(parents=True, exist_ok=True)
+    np.savetxt(savepath + "X_train.txt", X_train, fmt="%.6f")
+    np.savetxt(savepath + "y_train.txt", y_train, fmt="%.6f")
+    np.savetxt(savepath + "X_val.txt", X_val, fmt="%.6f")
+    np.savetxt(savepath + "y_val.txt", y_val, fmt="%.6f")
 
-    np.savetxt(path_out + "X_train.txt", X_train, fmt="%.6f")
-    np.savetxt(path_out + "y_train.txt", y_train, fmt="%.6f")
-    np.savetxt(path_out + "X_val.txt", X_val, fmt="%.6f")
-    np.savetxt(path_out + "y_val.txt", y_val, fmt="%.6f")
-
-    emul = GPEmul(X_train, y_train, device=device, learn_noise=False, scale_data=True)
-    emul.train(
-        X_val,
-        y_val,
-        n_restarts,
-        lr,
-        max_epochs,
-        patience,
-        savepath=path_out,
-        save_losses=False,
-        watch_metric=metric,
-    )
+    emul = GPEmul(X_train, y_train)
+    emul.train(X_val, y_val, savepath=savepath)
 
     # ================================================================
     # (4) Saving trained GPE
     # ================================================================
-    filename = "gpe.pth"
-    emul.save(filename=filename)
+    emul.save()
 
     # ================================================================
     # (5) Loading already trained GPE
     # ================================================================
     # NOTE: you need exactely the same training dataset used in (3)
     # ================================================================
-    emul = GPEmul.load(path_out, X_train, y_train, filename=filename)
+    loadpath = savepath
+    emul = GPEmul.load(loadpath, X_train, y_train)
 
     # ================================================================
     # (6) Testing trained GPE at new input points (inference)

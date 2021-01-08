@@ -14,7 +14,7 @@ from gpytGPE.utils.design import get_minmax, read_labels
 from gpytGPE.utils.plotting import gsa_box, gsa_donut
 
 EMUL_TYPE = "full"  # possible choices are: "full", "best"
-METRIC = "R2Score"
+WATCH_METRIC = "R2Score"
 N = 1000
 N_DRAWS = 1000
 SEED = 8
@@ -35,7 +35,7 @@ def main():
     # ================================================================
     emul_type = EMUL_TYPE
     idx_feature = sys.argv[2]
-    metric = METRIC
+    metric = WATCH_METRIC
     path = sys.argv[1].rstrip("/") + "/" + idx_feature + "/"
 
     if emul_type == "best":

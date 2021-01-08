@@ -10,31 +10,14 @@ from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
 
 FOLD = 5
-LEARNING_RATE = 0.1
-MAX_EPOCHS = 1000
-METRIC = "R2Score"
-N_RESTARTS = 10
-PATIENCE = 20
+WATCH_METRIC = "R2Score"
 SEED = 8
 
 
-def cv(
-    X_train,
-    y_train,
-    X_val,
-    y_val,
-    device,
-    n_restarts,
-    lr,
-    max_epochs,
-    metric,
-    patience,
-    split,
-    path,
-):
+def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     print(f"\nSplit {split}...")
 
-    savepath = path + f"{split}" + "/"
+    savepath += f"{split}" + "/"
     Path(savepath).mkdir(parents=True, exist_ok=True)
 
     np.savetxt(savepath + "X_train.txt", X_train, fmt="%.6f")
@@ -42,18 +25,8 @@ def cv(
     np.savetxt(savepath + "X_val.txt", X_val, fmt="%.6f")
     np.savetxt(savepath + "y_val.txt", y_val, fmt="%.6f")
 
-    emul = GPEmul(X_train, y_train, device=device, learn_noise=False, scale_data=True)
-    emul.train(
-        X_val,
-        y_val,
-        n_restarts,
-        lr,
-        max_epochs,
-        patience,
-        savepath=savepath,
-        save_losses=False,
-        watch_metric=metric,
-    )
+    emul = GPEmul(X_train, y_train)
+    emul.train(X_val, y_val, savepath=savepath, watch_metric=metric)
     emul.save()
 
     return emul.metric_score, emul.best_epoch
@@ -71,23 +44,18 @@ def main():
     # ================================================================
     # Loading the dataset
     # ================================================================
-    path_in = sys.argv[1].rstrip("/") + "/"
+    loadpath = sys.argv[1].rstrip("/") + "/"
     idx_feature = sys.argv[2]
 
-    X = np.loadtxt(path_in + "X.txt", dtype=float)
-    y = np.loadtxt(path_in + "Y.txt", dtype=float)[:, int(idx_feature)]
+    X = np.loadtxt(loadpath + "X.txt", dtype=float)
+    y = np.loadtxt(loadpath + "Y.txt", dtype=float)[:, int(idx_feature)]
 
     # ================================================================
     # GPE training with cross-validation
     # ================================================================
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     fold = FOLD
-    lr = LEARNING_RATE
-    max_epochs = MAX_EPOCHS
-    metric = METRIC
-    n_restarts = N_RESTARTS
-    patience = PATIENCE
-    path_out = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
+    metric = WATCH_METRIC
+    savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
 
     kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
 
@@ -97,14 +65,9 @@ def main():
             y[idx_train],
             X[idx_val],
             y[idx_val],
-            device,
-            n_restarts,
-            lr,
-            max_epochs,
-            metric,
-            patience,
             split,
-            path_out,
+            savepath,
+            metric,
         )
         for split, (idx_train, idx_val) in enumerate(kf.split(X))
     }
@@ -112,7 +75,7 @@ def main():
 
     metric_score_list = [results[i][0] for i in range(fold)]
     np.savetxt(
-        path_out + metric + "_cv.txt", np.array(metric_score_list), fmt="%.6f"
+        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%.6f"
     )
 
     # ================================================================
@@ -121,18 +84,16 @@ def main():
     best_epoch_list = [results[i][1] for i in range(fold)]
     n_epochs = int(np.around(np.mean(best_epoch_list), decimals=0))
 
-    np.savetxt(path_out + "X_train.txt", X, fmt="%.6f")
-    np.savetxt(path_out + "y_train.txt", y, fmt="%.6f")
+    np.savetxt(savepath + "X_train.txt", X, fmt="%.6f")
+    np.savetxt(savepath + "y_train.txt", y, fmt="%.6f")
 
-    emul = GPEmul(X, y, device=device, learn_noise=False, scale_data=True)
+    emul = GPEmul(X, y)
     emul.train(
         [],
         [],
-        n_restarts,
-        lr,
         max_epochs=n_epochs,
         patience=n_epochs,
-        savepath=path_out,
+        savepath=savepath,
         save_losses=True,
         watch_metric=metric,
     )
