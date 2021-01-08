@@ -10,6 +10,22 @@ from gpytGPE.utils.earlystopping import EarlyStopping
 from gpytGPE.utils.metrics import MAPE, MSE, R2Score
 from gpytGPE.utils.preprocessing import Scaler
 
+# default kwargs:
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE_LOAD = torch.device("cpu")
+LEARN_NOISE = False
+SCALE_DATA = True
+LEARNING_RATE = 0.1
+MAX_EPOCHS = 1000
+N_RESTARTS = 10
+PATIENCE = 20
+SAVEPATH = "./"
+SAVE_LOSSES = False
+METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
+WATCH_METRIC = "R2Score"
+FILENAME = "gpe.pth"
+N_DRAWS = 1000
+
 
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, in_dim, train_x, train_y, likelihood):
@@ -34,9 +50,9 @@ class GPEmul:
         self,
         X_train,
         y_train,
-        device=torch.device("cpu"),
-        learn_noise=False,
-        scale_data=True,
+        device=DEVICE,
+        learn_noise=LEARN_NOISE,
+        scale_data=SCALE_DATA,
     ):
         self.scale_data = scale_data
         if self.scale_data:
@@ -82,13 +98,13 @@ class GPEmul:
         self,
         X_val,
         y_val,
-        n_restarts,
-        learning_rate,
-        max_epochs,
-        patience,
-        savepath="./",
-        save_losses=False,
-        watch_metric="R2Score",
+        learning_rate=LEARNING_RATE,
+        max_epochs=MAX_EPOCHS,
+        n_restarts=N_RESTARTS,
+        patience=PATIENCE,
+        savepath=SAVEPATH,
+        save_losses=SAVE_LOSSES,
+        watch_metric=WATCH_METRIC,
     ):
         print("\nTraining emulator...")
         if isinstance(X_val, np.ndarray) and isinstance(y_val, np.ndarray):
@@ -101,17 +117,14 @@ class GPEmul:
         else:
             self.with_val = False
 
-        self.save_losses = save_losses
-
-        metrics_dict = {"R2Score": R2Score, "MAPE": MAPE, "MSE": MSE}
-        self.watch_metric = watch_metric
-        self.metric = metrics_dict[self.watch_metric]
-
         self.n_restarts = n_restarts
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.patience = patience
         self.savepath = savepath
+        self.save_losses = save_losses
+        self.watch_metric = watch_metric
+        self.metric = METRICS_DCT[self.watch_metric]
 
         train_loss_list = []
         model_state_list = []
@@ -284,7 +297,7 @@ class GPEmul:
 
         return y_mean, y_std
 
-    def sample(self, X_new, n_draws):
+    def sample(self, X_new, n_draws=N_DRAWS):
         self.model.eval()
         self.likelihood.eval()
 
@@ -337,7 +350,7 @@ class GPEmul:
             dpi=1000,
         )
 
-    def save(self, filename="gpe.pth"):
+    def save(self, filename=FILENAME):
         print("\nSaving trained emulator...")
         torch.save(self.best_model, self.savepath + filename)
         print("\nDone.")
@@ -348,16 +361,13 @@ class GPEmul:
         loadpath,
         X_train,
         y_train,
-        filename="gpe.pth",
-        device=torch.device("cpu"),
+        device=DEVICE_LOAD,
     ):
         print("\nLoading emulator...")
         emul = cls(
             X_train, y_train, device=device, learn_noise=False, scale_data=True
         )
-        emul.model.load_state_dict(
-            torch.load(loadpath + filename, map_location=device)
-        )
+        emul.model.load_state_dict(torch.load(loadpath, map_location=device))
         emul.model.to(device)
         emul.with_val = False
 
