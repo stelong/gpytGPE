@@ -31,7 +31,12 @@ class GPEmul:
     """
 
     def __init__(
-        self, X_train, y_train, device, learn_noise=False, scale_data=True
+        self,
+        X_train,
+        y_train,
+        device=torch.device("cpu"),
+        learn_noise=False,
+        scale_data=True,
     ):
         self.scale_data = scale_data
         if self.scale_data:
@@ -348,7 +353,7 @@ class GPEmul:
     ):
         print("\nLoading emulator...")
         emul = cls(
-            X_train, y_train, device, learn_noise=False, scale_data=True
+            X_train, y_train, device=device, learn_noise=False, scale_data=True
         )
         emul.model.load_state_dict(
             torch.load(loadpath + filename, map_location=device)
