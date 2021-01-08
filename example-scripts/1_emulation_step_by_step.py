@@ -64,14 +64,14 @@ def main():
     # ================================================================
     # (4) Saving trained GPE
     # ================================================================
-    emul.save()
+    emul.save(filename="gpe.pth")
 
     # ================================================================
     # (5) Loading already trained GPE
     # ================================================================
     # NOTE: you need exactely the same training dataset used in (3)
     # ================================================================
-    loadpath = savepath
+    loadpath = savepath + "gpe.pth"
     emul = GPEmul.load(loadpath, X_train, y_train)
 
     # ================================================================

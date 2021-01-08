@@ -13,7 +13,7 @@ from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import get_minmax, read_labels
 from gpytGPE.utils.plotting import gsa_box, gsa_donut
 
-EMUL_TYPE = "full"  # possible choices are: "full", "best"
+EMUL_TYPE = "best"  # possible choices are: "full", "best"
 WATCH_METRIC = "R2Score"
 N = 1000
 N_DRAWS = 1000
@@ -48,7 +48,8 @@ def main():
 
     X_train = np.loadtxt(path + "X_train.txt", dtype=float)
     y_train = np.loadtxt(path + "y_train.txt", dtype=float)
-    emul = GPEmul.load(path, X_train, y_train)
+    filename = "gpe.pth"
+    emul = GPEmul.load(path + filename, X_train, y_train)
 
     # ================================================================
     # Estimating Sobol' sensitivity indices
