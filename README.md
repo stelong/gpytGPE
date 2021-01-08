@@ -74,6 +74,13 @@ emulator = GPEmul(X_train, y_train, device=torch.device("cpu"), learn_noise=Fals
 ```
 The displayed keyword arguments are set to default values. If you intend to run the code on GPU, `device` can be set to `torch.device("cuda")`. By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardized before the training. To disable this option simply set `scale_data` to `False`.
 
+The training is performed with the command:
+```
+from gpytGPE.gpe import GPEmul
+
+emulator = GPEmul(X_train, y_train, device=torch.device("cpu"), learn_noise=False, scale_data=True)
+```
+
 ---
 ## Contributing
 
