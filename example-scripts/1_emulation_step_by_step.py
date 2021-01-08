@@ -70,7 +70,7 @@ def main():
     np.savetxt(path_out + "X_val.txt", X_val, fmt="%.6f")
     np.savetxt(path_out + "y_val.txt", y_val, fmt="%.6f")
 
-    emul = GPEmul(X_train, y_train, device, learn_noise=False, scale_data=True)
+    emul = GPEmul(X_train, y_train, device=device, learn_noise=False, scale_data=True)
     emul.train(
         X_val,
         y_val,
