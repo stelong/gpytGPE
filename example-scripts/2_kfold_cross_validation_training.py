@@ -9,7 +9,7 @@ from sklearn.model_selection import KFold
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
 
-FOLD = 3
+FOLD = 5
 WATCH_METRIC = "R2Score"
 SEED = 8
 
