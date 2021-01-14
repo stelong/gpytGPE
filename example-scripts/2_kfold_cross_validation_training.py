@@ -9,9 +9,9 @@ from sklearn.model_selection import KFold
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
 
-FOLD = 3
-WATCH_METRIC = "R2Score"
+FOLD = 5
 SEED = 8
+WATCH_METRIC = "R2Score"
 
 
 def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
