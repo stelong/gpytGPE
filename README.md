@@ -111,11 +111,12 @@ The emulator (either loaded or freshly trained) can be now used to make predicti
 X_test, y_test = ... # load the testing dataset here
 y_predicted_mean, y_predicted_std = emulator.predict(X_test)
 ```
-The returned vectors have shape `(X_test[0],)`.
+The returned vectors have shape `(X_test.shape[0],)`.
 
 To check to emulator accuracy we can see how different are the predicted mean values compared to the observed values by evaluating the metric function as follows:
 ```
 from gpytGPE.utils.metrics import R2Score
+
 print( R2Score(emulator.tensorize(y_test), emulator.tensorize(y_predicted_mean)) )
 ```
 Notice that we have to first make the `numpy.ndarray` vectors be tensors because of the metric function being specifically written for `torch` tensors.
@@ -124,7 +125,7 @@ It is also possible to draw samples from the emulator full posterior distributio
 ```
 Y_samples = emulator.sample(X_test)
 ```
-Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test[0], n_draws)`.
+Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test.shape[0], n_draws)`.
 
 ---
 ## Contributing
