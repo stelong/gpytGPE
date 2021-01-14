@@ -64,15 +64,15 @@ def main():
     # ================================================================
     # (4) Saving trained GPE
     # ================================================================
-    emul.save(filename="gpe.pth")
+    emul.save()
 
     # ================================================================
     # (5) Loading already trained GPE
     # ================================================================
     # NOTE: you need exactely the same training dataset used in (3)
     # ================================================================
-    loadpath = savepath + "gpe.pth"
-    emul = GPEmul.load(loadpath, X_train, y_train)
+    loadpath = savepath
+    emul = GPEmul.load(X_train, y_train, loadpath)
 
     # ================================================================
     # (6) Testing trained GPE at new input points (inference)
@@ -84,7 +84,7 @@ def main():
 
     y_pred_mean, y_pred_std = emul.predict(X_test)
     r2s = R2Score(emul.tensorize(y_test), emul.tensorize(y_pred_mean))
-    print(f"\nAccuracy on testing dataset: R2Score = {r2s:.6f}.")
+    print(f"\nAccuracy on testing dataset: R2Score = {r2s:.6f}")
 
     # ================================================================
     # (7) Plotting predictions vs observations
@@ -121,10 +121,11 @@ def main():
         lw=0.5,
         label=f"uncertainty ({ci} STD)",
     )
-    axis.set_title(f"R2Score = {r2s:.6f}", fontsize=12)
+
     axis.set_xticks([])
     axis.set_xticklabels([])
     axis.set_ylabel(ylabels[int(idx_feature)], fontsize=12)
+    axis.set_title(f"R2Score = {r2s:.6f}", fontsize=12)
     axis.legend(loc="upper left")
 
     fig.tight_layout()
