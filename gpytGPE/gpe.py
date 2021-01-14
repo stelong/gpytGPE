@@ -10,7 +10,6 @@ from gpytGPE.utils.earlystopping import EarlyStopping
 from gpytGPE.utils.metrics import MAPE, MSE, R2Score
 from gpytGPE.utils.preprocessing import Scaler
 
-# default kwargs:
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEVICE_LOAD = torch.device("cpu")
 FILENAME = "gpe.pth"
@@ -19,9 +18,9 @@ LEARNING_RATE = 0.1
 MAX_EPOCHS = 1000
 METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
 N_DRAWS = 1000
-N_RESTARTS = 2
+N_RESTARTS = 10
+PATH = "./"
 PATIENCE = 20
-SAVEPATH = "./"
 SAVE_LOSSES = False
 SCALE_DATA = True
 WATCH_METRIC = "R2Score"
@@ -102,7 +101,7 @@ class GPEmul:
         max_epochs=MAX_EPOCHS,
         n_restarts=N_RESTARTS,
         patience=PATIENCE,
-        savepath=SAVEPATH,
+        savepath=PATH,
         save_losses=SAVE_LOSSES,
         watch_metric=WATCH_METRIC,
     ):
@@ -358,16 +357,17 @@ class GPEmul:
     @classmethod
     def load(
         cls,
-        loadpath,
         X_train,
         y_train,
+        loadpath=PATH,
+        filename=FILENAME,
         device=DEVICE_LOAD,
     ):
         print("\nLoading emulator...")
-        emul = cls(
-            X_train, y_train, device=device, learn_noise=False, scale_data=True
+        emul = cls(X_train, y_train, device=device)
+        emul.model.load_state_dict(
+            torch.load(loadpath + filename, map_location=device)
         )
-        emul.model.load_state_dict(torch.load(loadpath, map_location=device))
         emul.model.to(device)
         emul.with_val = False
 
