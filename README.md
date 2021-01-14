@@ -70,20 +70,18 @@ The emulator base class is `GPEmul`. An emulator object can be instantiated as f
 ```
 from gpytGPE.gpe import GPEmul
 
-emulator = GPEmul(X_train, y_train), device=torch.device("cpu"), learn_noise=False, scale_data=True)
+emulator = GPEmul(X_train, y_train)
 ```
 Additional keyword arguments with default values are:
 * `device=torch.device("cuda" if torch.cuda.is_available() else "cpu")`
 * `learn_noise=False`
 * `scale_data=True`
 
-By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardized before the training. To disable this option simply set `scale_data` to `False`.
+By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardised before the training. To disable this option simply set `scale_data` to `False`.
 
 The training is performed via the command:
 ```
-from gpytGPE.gpe import GPEmul
-
-emul.train(X_val, y_val)
+emulator.train(X_val, y_val)
 ```
 Additional keyword arguments with default values are:
 * `learning_rate=0.1`
@@ -93,6 +91,8 @@ Additional keyword arguments with default values are:
 * `savepath="./"`
 * `save_losses=False`
 * `watch_metric="R2Score"`
+
+`learning_rate` is a tuning parameter for the employed *Adam* optimization algorithm that determines the step size at each iteration while moving toward a minimum of the loss function. It normally dafaults to `1e-3` but I found that in Gaussian process context we can achieve a faster convergence with `1e-1` without notable differences. `max_epochs` is the maximum number of allowed epochs (iterations) in the training loop. `n_restarts` is the number of times we want to repeat the optimization algorithm starting from a different point in the hyperparameter high-dimensional space. `patience` is the maximum number of epochs we want to wait without seeing any improvement on the validation loss (if called as above: `emulator.train(X_val, y_val)`) or on the training loss (if called with empty arguments: `emulator.train([], [])`). `savepath` is the absolute path where the code will store training `checkpoint.pth` files and the final trained emulator object `gpe.pth`. To output figures of monitored quantities such as training loss, validation loss and metric of interest over epochs, set `save_losses` to `True`. `watch_metric` can be set to any metric name chosen among the available ones (currently `"MAPE"`, `"MSE"`, `"R2Score"`).
 
 ---
 ## Contributing
