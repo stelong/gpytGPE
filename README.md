@@ -111,11 +111,12 @@ The emulator (either loaded or freshly trained) can be now used to make predicti
 X_test, y_test = ... # load the testing dataset here
 y_predicted_mean, y_predicted_std = emulator.predict(X_test)
 ```
-The returned `numpy.ndarray` vectors have shape `(X_test[0],)`
+The returned vectors have shape `(X_test[0],)`.
 
-To check to emulator accuracy we can check how different are the predicted mean values compared to the observed values by evaluating the metric function as follows:
+To check to emulator accuracy we can see how different are the predicted mean values compared to the observed values by evaluating the metric function as follows:
 ```
-print(R2Score(emulator.tensorize(y_test), emulator.tensorize(y_predicted_mean)))
+from gpytGPE.utils.metrics import R2Score
+print( R2Score(emulator.tensorize(y_test), emulator.tensorize(y_predicted_mean)) )
 ```
 Notice that we have to first make the `numpy.ndarray` vectors be tensors because of the metric function being specifically written for `torch` tensors.
 
