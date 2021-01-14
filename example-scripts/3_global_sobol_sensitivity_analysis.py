@@ -13,12 +13,13 @@ from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import get_minmax, read_labels
 from gpytGPE.utils.plotting import gsa_box, gsa_donut
 
+CALC_SECOND_ORDER = True
 EMUL_TYPE = "full"  # possible choices are: "full", "best"
-WATCH_METRIC = "R2Score"
 N = 1000
 N_DRAWS = 1000
 SEED = 8
 THRE = 0.01
+WATCH_METRIC = "R2Score"
 
 
 def main():
@@ -36,41 +37,43 @@ def main():
     emul_type = EMUL_TYPE
     idx_feature = sys.argv[2]
     metric = WATCH_METRIC
-    path = sys.argv[1].rstrip("/") + "/" + idx_feature + "/"
+    loadpath = sys.argv[1].rstrip("/") + "/"
+    savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
 
     if emul_type == "best":
-        metric_score_list = np.loadtxt(path + metric + "_cv.txt", dtype=float)
+        metric_score_list = np.loadtxt(
+            savepath + metric + "_cv.txt", dtype=float
+        )
         if metric == "R2Score":
             best_split = np.argmax(metric_score_list)
         else:
             best_split = np.argmin(metric_score_list)
-        path = path + f"{best_split}/"
+        savepath = savepath + f"{best_split}/"
 
-    X_train = np.loadtxt(path + "X_train.txt", dtype=float)
-    y_train = np.loadtxt(path + "y_train.txt", dtype=float)
-    filename = "gpe.pth"
-    emul = GPEmul.load(path + filename, X_train, y_train)
+    X_train = np.loadtxt(savepath + "X_train.txt", dtype=float)
+    y_train = np.loadtxt(savepath + "y_train.txt", dtype=float)
+
+    emul = GPEmul.load(X_train, y_train, savepath)
 
     # ================================================================
     # Estimating Sobol' sensitivity indices
     # ================================================================
-    label = read_labels("data/ylabels.txt")
+    label = read_labels(loadpath + "ylabels.txt")
 
+    calc_second_order = CALC_SECOND_ORDER
     n = N
     n_draws = N_DRAWS
 
     D = X_train.shape[1]
     I = get_minmax(X_train)
 
-    index_i = read_labels("data/xlabels.txt")
-    index_ij = [
-        "({}, {})".format(c[0], c[1]) for c in combinations(index_i, 2)
-    ]
+    index_i = read_labels(loadpath + "xlabels.txt")
+    index_ij = [f"({c[0]}, {c[1]})" for c in combinations(index_i, 2)]
 
     problem = {"num_vars": D, "names": index_i, "bounds": I}
 
     X_sobol = saltelli.sample(
-        problem, n, calc_second_order=True
+        problem, n, calc_second_order=calc_second_order
     )  # n x (2D + 2) | if calc_second_order == False --> n x (D + 2)
     Y = emul.sample(X_sobol, n_draws=n_draws)
 
@@ -82,7 +85,7 @@ def main():
         S = sobol.analyze(
             problem,
             Y[i],
-            calc_second_order=True,
+            calc_second_order=calc_second_order,
             parallel=True,
             n_processors=multiprocessing.cpu_count(),
             seed=seed,
@@ -95,9 +98,9 @@ def main():
         S1 = np.vstack((S1, first_order["S1"].reshape(1, -1)))
         S2 = np.vstack((S2, np.array(second_order["S2"]).reshape(1, -1)))
 
-    np.savetxt(path + "STi.txt", ST, fmt="%.6f")
-    np.savetxt(path + "Si.txt", S1, fmt="%.6f")
-    np.savetxt(path + "Sij.txt", S2, fmt="%.6f")
+    np.savetxt(savepath + "STi.txt", ST, fmt="%.6f")
+    np.savetxt(savepath + "Si.txt", S1, fmt="%.6f")
+    np.savetxt(savepath + "Sij.txt", S2, fmt="%.6f")
 
     # ================================================================
     # Plotting
@@ -105,8 +108,8 @@ def main():
     thre = THRE
     ylab = label[int(idx_feature)]
 
-    gsa_donut(path, thre, index_i, ylab, savefig=True)
-    gsa_box(path, thre, index_i, index_ij, ylab, savefig=True)
+    gsa_donut(savepath, thre, index_i, ylab, savefig=True)
+    gsa_box(savepath, thre, index_i, index_ij, ylab, savefig=True)
 
 
 if __name__ == "__main__":
