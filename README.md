@@ -70,16 +70,29 @@ The emulator base class is `GPEmul`. An emulator object can be instantiated as f
 ```
 from gpytGPE.gpe import GPEmul
 
-emulator = GPEmul(X_train, y_train, device=torch.device("cpu"), learn_noise=False, scale_data=True)
+emulator = GPEmul(X_train, y_train), device=torch.device("cpu"), learn_noise=False, scale_data=True)
 ```
-The displayed keyword arguments are set to default values. If you intend to run the code on GPU, `device` can be set to `torch.device("cuda")`. By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardized before the training. To disable this option simply set `scale_data` to `False`.
+Additional keyword arguments with default values are:
+* `device=torch.device("cuda" if torch.cuda.is_available() else "cpu")`
+* `learn_noise=False`
+* `scale_data=True`
 
-The training is performed with the command:
+By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardized before the training. To disable this option simply set `scale_data` to `False`.
+
+The training is performed via the command:
 ```
 from gpytGPE.gpe import GPEmul
 
-emulator = GPEmul(X_train, y_train, device=torch.device("cpu"), learn_noise=False, scale_data=True)
+emul.train(X_val, y_val)
 ```
+Additional keyword arguments with default values are:
+* `learning_rate=0.1`
+* `max_epochs=1000`
+* `n_restarts=10`
+* `patience=20`
+* `savepath="./"`
+* `save_losses=False`
+* `watch_metric="R2Score"`
 
 ---
 ## Contributing
