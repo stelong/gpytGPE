@@ -94,6 +94,37 @@ Additional keyword arguments with default values are:
 
 `learning_rate` is a tuning parameter for the employed *Adam* optimization algorithm that determines the step size at each iteration while moving toward a minimum of the loss function. It normally dafaults to `1e-3` but I found that in Gaussian process context we can achieve a faster convergence with `1e-1` without notable differences. `max_epochs` is the maximum number of allowed epochs (iterations) in the training loop. `n_restarts` is the number of times we want to repeat the optimization algorithm starting from a different point in the hyperparameter high-dimensional space. `patience` is the maximum number of epochs we want to wait without seeing any improvement on the validation loss (if called as above: `emulator.train(X_val, y_val)`) or on the training loss (if called with empty arguments: `emulator.train([], [])`). `savepath` is the absolute path where the code will store training `checkpoint.pth` files and the final trained emulator object `gpe.pth`. To output figures of monitored quantities such as training loss, validation loss and metric of interest over epochs, set `save_losses` to `True`. `watch_metric` can be set to any metric name chosen among the available ones (currently `"MAPE"`, `"MSE"`, `"R2Score"`).
 
+Finally, the trained emulator object can be saved as:
+```
+emulator.save()
+```
+Additional keyword argument is `filename` which defaults to `gpe.pth`.
+
+Once you have a trained emulator object, this can be easily loaded as:
+```
+emulator.load(X_train, y_train)
+```
+Additional keyword arguments are `loadpath` which defaults to the training `savepath` (default is `"./"`) and `filename` which defaults to the saving `filename` (default is `"gpe.pth"`)
+
+The emulator (either loaded or freshly trained) can be now used to make predictions (inference) at a new (never observed) set of points. This can be performed through the command:
+```
+X_test, y_test = ... # load the testing dataset here
+y_predicted_mean, y_predicted_std = emulator.predict(X_test)
+```
+The returned `numpy.ndarray` vectors have shape `(X_test[0],)`
+
+To check to emulator accuracy we can check how different are the predicted mean values compared to the observed values by evaluating the metric function as follows:
+```
+print(R2Score(emulator.tensorize(y_test), emulator.tensorize(y_predicted_mean)))
+```
+Notice that we have to first make the `numpy.ndarray` vectors be tensors because of the metric function being specifically written for `torch` tensors.
+
+It is also possible to draw samples from the emulator full posterior distribution via the `sample` command:
+```
+Y_samples = emulator.sample(X_test)
+```
+Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test[0], n_draws)`.
+
 ---
 ## Contributing
 
