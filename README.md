@@ -56,15 +56,17 @@ pip install .
 ```
 cd example-scripts/
 ```
-To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `example-scripts/data/`.
+To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `data/`.
 
+
+# Script 1
 To emulate feature #1 (first column of matrix Y), we will replace `IDX` with `0` in the command below:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
 More in general, to emulate feature #j we run the command with `j-1`. Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with the trained emulator object `gpe.pth` and other files.
 
-This first script guides you through common steps (0-7) to make towards a complete emulation of the map X -> Y[:, IDX], from dataset loading to actual training to emulator testing. 
+This first script guides you through common steps (0-7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. 
 
 The emulator base class is `GPEmul`. An emulator object can be instantiated as follows:
 ```
@@ -98,15 +100,15 @@ Finally, the trained emulator object can be saved as:
 ```
 emulator.save()
 ```
-Additional keyword argument is `filename` which defaults to `gpe.pth`.
+Additional keyword argument is `filename` which defaults to `"gpe.pth"`.
 
 Once you have a trained emulator object, this can be easily loaded as:
 ```
 emulator.load(X_train, y_train)
 ```
-Additional keyword arguments are `loadpath` which defaults to the training `savepath` (default is `"./"`) and `filename` which defaults to the saving `filename` (default is `"gpe.pth"`)
+Additional keyword arguments are `loadpath` which defaults to the training `savepath` (default is `"./"`) and `filename` which defaults to the saving `filename` (default is `"gpe.pth"`). Notice that we need exactely the same dataset used during the training (`X_train` and `y_train`) to load a trained emulator.
 
-The emulator (either loaded or freshly trained) can be now used to make predictions (inference) at a new (never observed) set of points. This can be performed through the command:
+The emulator (either loaded or freshly trained) can be now used to make predictions (inference) at a new (never observed) set of points. This can be performed through the `predict` command:
 ```
 X_test, y_test = ... # load the testing dataset here
 y_predicted_mean, y_predicted_std = emulator.predict(X_test)
@@ -126,6 +128,14 @@ It is also possible to draw samples from the emulator full posterior distributio
 Y_samples = emulator.sample(X_test)
 ```
 Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test.shape[0], n_draws)`.
+
+
+# Script 2
+
+# Script 3
+
+# Script 4
+
 
 ---
 ## Contributing
