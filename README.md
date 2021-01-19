@@ -60,13 +60,13 @@ To run the example scripts showing the full library capabilities you need to for
 
 
 ### Script 1: emulation step-by-step
-This first script guides you through common steps (0)-(7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. `IDX` is an integer representing the column index (counting from 0) of the selected feature to be emulated. The input dataset is automatically split such that %80 of it is used for training while the remaining 20% is used for validation/testing. 
+This first script guides you through common steps (0)-(7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. `IDX` is an integer representing the column index (counting from 0) of the selected feature to be emulated. The input dataset is automatically split such that 80% of it is used for training while the remaining 20% is used for validation/testing. 
 
 To run the script, type:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
-Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with the trained emulator object `gpe.pth` and other files.
+Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with a trained emulator object `gpe.pth` and training dataset files `X_train.txt`, `y_train.txt`.
 
 The emulator base class is `GPEmul`. An emulator object can be instantiated as follows:
 ```
