@@ -59,7 +59,7 @@ cd example-scripts/
 To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `data/`.
 
 
-# Script 1
+### Script 1
 To emulate feature #1 (first column of matrix Y), we will replace `IDX` with `0` in the command below:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/
@@ -130,11 +130,11 @@ Y_samples = emulator.sample(X_test)
 Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test.shape[0], n_draws)`.
 
 
-# Script 2
+### Script 2
 
-# Script 3
+### Script 3
 
-# Script 4
+### Script 4
 
 
 ---
