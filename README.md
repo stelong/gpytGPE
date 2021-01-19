@@ -59,14 +59,14 @@ cd example-scripts/
 To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `data/`.
 
 
-### Script 1
-To emulate feature #1 (first column of matrix Y), we will replace `IDX` with `0` in the command below:
+### Script 1: emulation step-by-step
+This first script guides you through common steps (0)-(7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. `IDX` is an integer representing the column index (counting from 0) of the selected feature to be emulated. The input dataset is automatically split such that %80 of it is used for training while the remaining 20% is used for validation/testing. 
+
+To run the script, type:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
-More in general, to emulate feature #j we run the command with `j-1`. Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with the trained emulator object `gpe.pth` and other files.
-
-This first script guides you through common steps (0-7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. 
+Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with the trained emulator object `gpe.pth` and other files.
 
 The emulator base class is `GPEmul`. An emulator object can be instantiated as follows:
 ```
@@ -130,11 +130,19 @@ Y_samples = emulator.sample(X_test)
 Additional keyword argument is `n_draws`, the number of samples to draw, which defaults to `1000`. The returned matrix has shape `(X_test.shape[0], n_draws)`.
 
 
-### Script 2
+### Script 2: K-fold cross-valiadation training
+This script automatically performs a K-fold cross-validation training and a final training on the entire dataset. Default number of splits and metric used are `5` and `"R2Score"`.
 
-### Script 3
+To run the script, type:
+```
+python3 2_kfold_cross_validation_training.py /absolute/path/to/input/ IDX /absolute/path/to/output/
+```
+After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/`. In `/absolute/path/to/output/IDX/`, other 5 folders (numbered from 0) will be created and filled with a trained emulator object `gpe.pth` and dataset files `X_train.txt`, `y_train.txt` corresponding to the specific four fifth of the dataset the emulator has been trained on. Moreover, in `/absolute/path/to/output/`, the same three files will be produced with the only difference being the emulator this time being trained on the entire dataset. An additional file `R2Score_cv.txt` will be outputed, containing the accuracy obtained on each left-out part of the dataset during the cross-validation process.
 
-### Script 4
+
+### Script 3: GPE-based Sobol' global sensitivity analysis (GSA)
+
+### Script 4: GSA parameters ranking
 
 
 ---
