@@ -88,7 +88,7 @@ class GPEmul:
         hyperparameters = {
             "mean_module.weights": torch.zeros(self.n_in_features),
             "mean_module.bias": torch.tensor(self.data_mean),
-            "covar_module.outputscale": torch.tensor(1.0),
+            # "covar_module.outputscale": torch.tensor(1.0),
         }
         self.model.initialize(**hyperparameters)
         self.init_state = deepcopy(self.model.state_dict())
@@ -369,6 +369,7 @@ class GPEmul:
             torch.load(loadpath + filename, map_location=device)
         )
         emul.model.to(device)
+        emul.learn_noise = True
         emul.with_val = False
 
         print("\nDone. The emulator hyperparameters are:")
