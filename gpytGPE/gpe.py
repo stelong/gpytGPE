@@ -3,7 +3,7 @@ from copy import deepcopy
 import gpytorch
 import matplotlib.gridspec as grsp
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy
 import torch
 
 from gpytGPE.utils.earlystopping import EarlyStopping
@@ -26,12 +26,35 @@ SCALE_DATA = True
 WATCH_METRIC = "R2Score"
 
 
+class LinearMean(gpytorch.means.Mean):
+    def __init__(self, input_size, data_mean, batch_shape=torch.Size()):
+        super().__init__()
+        self.register_parameter(
+            name="weights",
+            parameter=torch.nn.Parameter(
+                torch.zeros(*batch_shape, input_size, 1)
+            ),
+        )
+        self.register_parameter(
+            name="bias",
+            parameter=torch.nn.Parameter(
+                data_mean * torch.ones(*batch_shape, 1)
+            ),
+        )
+
+    def forward(self, x):
+        res = self.bias + x.matmul(self.weights).squeeze(-1)
+        return res
+
+
 class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(self, in_dim, train_x, train_y, likelihood):
+    def __init__(self, input_size, data_mean, train_x, train_y, likelihood):
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
-        self.mean_module = gpytorch.means.LinearMean(in_dim)
+        self.mean_module = LinearMean(
+            input_size=input_size, data_mean=data_mean
+        )
         self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel(ard_num_dims=in_dim)
+            gpytorch.kernels.RBFKernel(ard_num_dims=input_size)
         )
 
     def forward(self, x):
@@ -69,12 +92,13 @@ class GPEmul:
             self.y_train = self.tensorize(y_train)
 
         self.device = device
-        self.data_mean = 0.0 if self.scale_data else np.mean(y_train)
+        self.data_mean = 0.0 if self.scale_data else numpy.mean(y_train)
         self.n_samples = X_train.shape[0]
-        self.n_in_features = X_train.shape[1] if len(X_train.shape) > 1 else 1
+        self.input_size = X_train.shape[1] if len(X_train.shape) > 1 else 1
         self.learn_noise = learn_noise
 
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
+
         if not self.learn_noise:
             self.likelihood.noise_covar.register_constraint(
                 "raw_noise", gpytorch.constraints.GreaterThan(1e-6)
@@ -83,14 +107,12 @@ class GPEmul:
             self.likelihood.noise_covar.raw_noise.requires_grad_(False)
 
         self.model = ExactGPModel(
-            self.n_in_features, self.X_train, self.y_train, self.likelihood
+            self.input_size,
+            self.data_mean,
+            self.X_train,
+            self.y_train,
+            self.likelihood,
         )
-        hyperparameters = {
-            "mean_module.weights": torch.zeros(self.n_in_features),
-            "mean_module.bias": torch.tensor(self.data_mean),
-            # "covar_module.outputscale": torch.tensor(1.0),
-        }
-        self.model.initialize(**hyperparameters)
         self.init_state = deepcopy(self.model.state_dict())
 
     def train(
@@ -106,7 +128,9 @@ class GPEmul:
         watch_metric=WATCH_METRIC,
     ):
         print("\nTraining emulator...")
-        if isinstance(X_val, np.ndarray) and isinstance(y_val, np.ndarray):
+        if isinstance(X_val, numpy.ndarray) and isinstance(
+            y_val, numpy.ndarray
+        ):
             self.with_val = True
             if self.scale_data:
                 X_val = self.scx.transform(X_val)
@@ -157,10 +181,10 @@ class GPEmul:
                     )
 
         if self.with_val:
-            idx_min = np.argmin(val_loss_list)
+            idx_min = numpy.argmin(val_loss_list)
             self.metric_score = metric_score_list[idx_min]
         else:
-            idx_min = np.argmin(train_loss_list)
+            idx_min = numpy.argmin(train_loss_list)
         self.best_restart = idx_min + 1
         self.best_epoch = self.idx_best_list[idx_min] + 1
 
@@ -175,14 +199,22 @@ class GPEmul:
 
     def train_once(self):
         self.model.load_state_dict(self.init_state)
-        lsc_inf = np.log(0.1)
-        lsc_sup = np.log(10.0)
+
+        theta_inf, theta_sup = numpy.log(1e-1), numpy.log(1e1)
         hyperparameters = {
-            "covar_module.base_kernel.raw_lengthscale": (lsc_sup - lsc_inf)
-            * torch.rand(self.n_in_features)
-            + lsc_inf,
+            "covar_module.base_kernel.raw_lengthscale": (theta_sup - theta_inf)
+            * torch.rand(self.input_size)
+            + theta_inf,
+            "covar_module.raw_outputscale": (theta_sup - theta_inf)
+            * torch.rand(1)
+            + theta_inf,
         }
         self.model.initialize(**hyperparameters)
+        if self.learn_noise:
+            self.likelihood.initialize(
+                raw_noise=(theta_sup - theta_inf) * torch.rand(1) + theta_inf
+            )
+
         self.model.to(self.device)
 
         self.optimizer = torch.optim.Adam(
@@ -230,9 +262,9 @@ class GPEmul:
 
         self.best_model = torch.load(self.savepath + "checkpoint.pth")
         if self.with_val:
-            self.idx_best = np.argmin(self.val_loss_list)
+            self.idx_best = numpy.argmin(self.val_loss_list)
         else:
-            self.idx_best = np.argmin(self.train_loss_list)
+            self.idx_best = numpy.argmin(self.train_loss_list)
 
         if self.save_losses:
             self.plot_loss()
@@ -263,6 +295,7 @@ class GPEmul:
         return val_loss.item(), metric_score
 
     def print_stats(self):
+        torch.set_printoptions(sci_mode=False)
         msg = (
             "\n"
             + f"Bias: {self.model.mean_module.bias.data.squeeze():.4f}\n"
@@ -273,7 +306,7 @@ class GPEmul:
         if self.learn_noise:
             msg += f"\nLikelihood noise: {self.likelihood.noise_covar.noise.data.squeeze():.4f}"
         if self.with_val:
-            msg += f"\n{self.watch_metric}: {self.metric_score:.6f}"
+            msg += f"\n{self.watch_metric}: {self.metric_score:.4f}"
         print(msg)
 
     def predict(self, X_new):
@@ -287,7 +320,7 @@ class GPEmul:
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             predictions = self.likelihood(self.model(X_new))
             y_mean = predictions.mean.cpu().numpy()
-            y_std = np.sqrt(predictions.variance.cpu().numpy())
+            y_std = numpy.sqrt(predictions.variance.cpu().numpy())
 
         if self.scale_data:
             y_mean, y_std = self.scy.inverse_transform_predictions(
@@ -337,7 +370,7 @@ class GPEmul:
 
         for i, v in enumerate(vectors):
             axis = fig.add_subplot(gs[0, i])
-            axis.scatter(np.arange(1, len(v) + 1), v)
+            axis.scatter(numpy.arange(1, len(v) + 1), v)
             axis.axvline(self.idx_best, c="r", ls="--", lw=0.8)
             axis.set_xlabel("Epochs", fontsize=12)
             axis.set_ylabel(ylabels[i], fontsize=12)
@@ -369,7 +402,9 @@ class GPEmul:
             torch.load(loadpath + filename, map_location=device)
         )
         emul.model.to(device)
-        emul.learn_noise = True
+        emul.learn_noise = not numpy.isclose(
+            emul.likelihood.noise_covar.noise.item(), 1e-4
+        )
         emul.with_val = False
 
         print("\nDone. The emulator hyperparameters are:")
