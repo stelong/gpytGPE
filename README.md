@@ -143,7 +143,7 @@ After the run completes, folder `IDX/` will be created in `/absolute/path/to/out
 ### Script 3: GPE-based Sobol' global sensitivity analysis (GSA)
 This scripts represents an additional, very useful tool to understand input parameters' impact on each model's scalar output total variance. Sobol's sensitivity indices, namely first-order, second-order and total effects are calculated for this purpose. The code uses Saltelli's and Jansen's estimators in combination with samples from the full GPE posterior distribution to get an entire distribution for each of the Sobol' indices.
 
-To run the script, type:
+To run the script, you need to have run **Script 2** with the same I/O paths and same `IDX`; then type:
 ```
 python3 3_global_sobol_sensitivity_analysis.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
