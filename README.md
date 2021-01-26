@@ -143,7 +143,9 @@ After the run completes, folder `IDX/` will be created in `/absolute/path/to/out
 ### Script 3: GPE-based Sobol' global sensitivity analysis (GSA)
 This scripts represents an additional, very useful tool to understand input parameters' impact on each model's scalar output total variance. Sobol's sensitivity indices, namely first-order, second-order and total effects are calculated for this purpose. The code uses Saltelli's and Jansen's estimators in combination with samples from the full GPE posterior distribution to get an entire distribution for each of the Sobol' indices.
 
-To run the script, you need to have run **Script 2** with the same I/O paths and same `IDX`; then type:
+Default emulator used is the one trained on the entire dataset `EMUL_TYPE="full"`. This is useful when the training dataset is small. Other available option is to use the best-performing emulator in the cross-validation process, i.e. the emulator which achieved the highest/lowest metric score when trained on a specific four fifth of the dataset and tested against the respective left-out part. The Sobol' indices estimators have cost of `M x (2*D + 2)` model evaluations, which becomes computationally tractable when, as in this case, the model is replaced by a fast-evaluating emulator. `M` (default is `1000`) is the number of initial points the algorithm samples from a low-discrepancy, quasi-random Sobol' sequence. If you don't want to calculate second-order indices, this can be switched-off by setting `CALC_SECOND_ORDER=False`. In this case, the total cost will be `M x (D + 2)`
+
+To run the script, you first need to have run **Script 2** with the same I/O paths and same `IDX`; then type:
 ```
 python3 3_global_sobol_sensitivity_analysis.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
