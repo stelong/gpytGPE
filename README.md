@@ -147,7 +147,7 @@ To run the script, type:
 ```
 python3 3_global_sobol_sensitivity_analysis.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
-After the run completes, folder `/absolute/path/to/output/IDX/` will be filled with indices' distributions files `STi.txt`, `Si.txt`, `Sij.txt` and two summary plot files `*labelname_box.pdf`, `*labelname_donut.pdf`.
+After the run completes, folder `/absolute/path/to/output/IDX/` will be filled with indices' distributions files `STi.txt`, `Si.txt`, `Sij.txt` and two summary plot files `*idxlabelname*_box.pdf`, `*idxlabelname*_donut.pdf`.
 
 ### Script 4: GSA parameters ranking
 
