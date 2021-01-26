@@ -141,9 +141,9 @@ After the run completes, folder `IDX/` will be created in `/absolute/path/to/out
 
 
 ### Script 3: GPE-based Sobol' global sensitivity analysis (GSA)
-This scripts represents an additional, very useful tool to understand input parameters' impact on each model's scalar output total variance. Sobol's sensitivity indices, namely first-order, second-order and total effects are calculated for this purpose. The code uses Saltelli's and Jansen's estimators in combination with samples from the full GPE posterior distribution to get an entire distribution for each of the Sobol' indices.
+This scripts represents an additional, very useful tool to understand input parameters' impact on each model's scalar output total variance. Sobol' sensitivity indices, namely first-order, second-order and total effects are calculated for this purpose. The code uses Saltelli's and Jansen's estimators in combination with samples from the full GPE posterior distribution to get an entire distribution for each of the Sobol' indices.
 
-Default emulator used is the one trained on the entire dataset (`EMUL_TYPE="full"`). This is useful when the training dataset is small. Other available option is to use the best-performing emulator in the cross-validation process (`EMUL_TYPE="best"`), i.e. the emulator which achieved the highest/lowest metric score when trained on a specific four fifth of the dataset and tested against the respective left-out part. The Sobol' indices estimators have cost of `M x (2*D + 2)` model evaluations, which becomes computationally tractable when, as in this case, the model is replaced by a fast-evaluating emulator. `M=1000` is the number of initial points the algorithm samples from a low-discrepancy, quasi-random Sobol' sequence. If you do not want to calculate second-order indices, this can be switched-off by setting `CALC_SECOND_ORDER=False`. In this case the total cost will be `M x (D + 2)`. The number of default GPE posterior distribution samples is `N_DRAWS=1000`. Parameters whose indices have distributions with mean or mean minus 3 standard deviations below `THRE=0.01` are considered to be negligible (no effect).
+Default emulator used is the one trained on the entire dataset (`EMUL_TYPE="full"`). This is useful when the training dataset is small. Other available option is to use the best-performing emulator in the cross-validation process (`EMUL_TYPE="best"`), i.e. the emulator which achieved the highest/lowest metric score when trained on a specific four fifth of the dataset and tested against the respective left-out part. The Sobol' indices estimators have cost of `M x (2*D + 2)` model evaluations, which becomes computationally tractable when, as in this case, the model is replaced by a fast-evaluating emulator. `M=1000` is the number of initial points the algorithm samples from a low-discrepancy, quasi-random Sobol' sequence. If you do not want to calculate second-order indices, this can be switched-off by setting `CALC_SECOND_ORDER=False`. In this case the total cost will be `M x (D + 2)`. The default number of GPE posterior distribution samples used is `N_DRAWS=1000`. Parameters whose indices have distributions with mean or mean minus 3 standard deviations below `THRE=0.01` are considered to be negligible (no effect).
 
 To run the script, you first need to have run **Script 2** with the same input/output paths and same `IDX`. Then type:
 ```
@@ -152,7 +152,14 @@ python3 3_global_sobol_sensitivity_analysis.py /absolute/path/to/input/ IDX /abs
 After the run completes, folder `/absolute/path/to/output/IDX/` (or `/absolute/path/to/output/IDX/BESTSPLIT_IDX/` if you used `EMUL_TYPE="best"`) will be filled with indices' distributions files `STi.txt`, `Si.txt`, `Sij.txt` and two summary plot files `*idxlabelname*_box.pdf`, `*idxlabelname*_donut.pdf`.
 
 ### Script 4: GSA parameters ranking
+This last script is an add-on functionality for global sensitivity analysis. If you have performed GSA across one or many different scalar output features (i.e. different columns of the output matrix *Y*) you may want to know which parameters resulted to be the most influencing. By adding in your `/absolute/path/to/input/` dataset-containing folder (in our example case, `data/`) an extra file called `features_idx_list.txt` which contains indices of output features for which you previously performed GSA, you can rank parameters from the most important to the least important.
 
+Ranking is performed according to first-order effects (`CRITERION="Si"`). This could have already been guessed by visually counting how many times a parameter shows up in the different `*idxlabelname*_donut.pdf` plots. If you want to rank parameters according to total effects, set `CRITERION="STi"`.
+
+To run the script, you first need to have run **Script 3** with the same input/output paths for each `IDX` listed in your `/absolute/path/to/input/features_idx_list.txt` file. Then type:
+```
+python3 4_gsa_parameters_ranking.py /absolute/path/to/input/ /absolute/path/to/output/ > params_ranking.txt
+```
 
 ---
 ## Contributing
