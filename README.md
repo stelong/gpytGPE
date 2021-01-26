@@ -104,9 +104,9 @@ Additional keyword argument is `filename` which defaults to `"gpe.pth"`.
 
 Once you have a trained emulator object, this can be easily loaded as:
 ```
-emulator.load(X_train, y_train)
+emulator = GPEmul.load(X_train, y_train)
 ```
-Additional keyword arguments are `loadpath` which defaults to the training `savepath` (default is `"./"`) and `filename` which defaults to the saving `filename` (default is `"gpe.pth"`). Notice that we need exactely the same dataset used during the training (`X_train` and `y_train`) to load a trained emulator.
+Additional keyword arguments are `loadpath` which defaults to the training `savepath` (default is `"./"`) and `filename` which defaults to the saving `filename` (default is `"gpe.pth"`). Notice that you need exactely the same dataset used during the training (`X_train` and `y_train`) to load a trained emulator.
 
 The emulator (either loaded or freshly trained) can be now used to make predictions (inference) at a new (never observed) set of points. This can be performed through the `predict` command:
 ```
