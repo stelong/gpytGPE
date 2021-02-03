@@ -17,7 +17,7 @@ The entire code runs on both CPU and GPU. The cross-validation training loop is 
 
 **Type**: `Personal project`
 
-**Development year(s)**: `2020-2021`
+**Development years**: `2020-2021`
 
 **Author**: [stelong](https://github.com/stelong)
 
