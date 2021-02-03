@@ -28,7 +28,7 @@ setup(
     author="Stefano Longobardi",
     author_email="stefano.longobardi.8@gmail.com",
     license='MIT',
-    description='A univariate Gaussian Process Emulator (GPE) implementation around GPyTorch',
+    description='A univariate Gaussian Process Emulator (GPE) implementation around GPyTorch (gpyt)',
     long_description=readme,
     long_description_content_type="text/markdown",
     python_requires='>=3.6',
