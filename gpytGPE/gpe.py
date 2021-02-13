@@ -23,6 +23,7 @@ PATH = "./"
 PATIENCE = 20
 SAVE_LOSSES = False
 SCALE_DATA = True
+STRAIGHT_TO_THE_END = False
 WATCH_METRIC = "R2Score"
 
 
@@ -125,6 +126,7 @@ class GPEmul:
         patience=PATIENCE,
         savepath=PATH,
         save_losses=SAVE_LOSSES,
+        straight_to_the_end=STRAIGHT_TO_THE_END,
         watch_metric=WATCH_METRIC,
     ):
         print("\nTraining emulator...")
@@ -146,6 +148,7 @@ class GPEmul:
         self.patience = patience
         self.savepath = savepath
         self.save_losses = save_losses
+        self.straight_to_the_end = straight_to_the_end
         self.watch_metric = watch_metric
         self.metric = METRICS_DCT[self.watch_metric]
 
@@ -164,9 +167,7 @@ class GPEmul:
                 self.train_once()
             except RuntimeError as err:
                 print(
-                    "Repeating restart {} because of RuntimeError: {}".format(
-                        self.restart_idx, err.args[0]
-                    )
+                    f"Repeating restart {self.restart_idx} because of RuntimeError: {err.args[0]}"
                 )
             else:
                 i += 1
@@ -260,11 +261,19 @@ class GPEmul:
                 print("Early stopping!")
                 break
 
+        if self.straight_to_the_end:
+            torch.save(
+                self.model.state_dict(), self.savepath + "checkpoint.pth"
+            )
+
         self.best_model = torch.load(self.savepath + "checkpoint.pth")
         if self.with_val:
             self.idx_best = numpy.argmin(self.val_loss_list)
         else:
-            self.idx_best = numpy.argmin(self.train_loss_list)
+            if self.straight_to_the_end:
+                self.idx_best = self.max_epochs - 1
+            else:
+                self.idx_best = numpy.argmin(self.train_loss_list)
 
         if self.save_losses:
             self.plot_loss()
@@ -371,7 +380,7 @@ class GPEmul:
         for i, v in enumerate(vectors):
             axis = fig.add_subplot(gs[0, i])
             axis.scatter(numpy.arange(1, len(v) + 1), v)
-            axis.axvline(self.idx_best, c="r", ls="--", lw=0.8)
+            axis.axvline(self.idx_best + 1, c="r", ls="--", lw=0.8)
             axis.set_xlabel("Epochs", fontsize=12)
             axis.set_ylabel(ylabels[i], fontsize=12)
 

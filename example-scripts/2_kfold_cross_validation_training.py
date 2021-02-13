@@ -95,6 +95,7 @@ def main():
         patience=n_epochs,
         savepath=savepath,
         save_losses=True,
+        straight_to_the_end=True,
         watch_metric=metric,
     )
     emul.save()
