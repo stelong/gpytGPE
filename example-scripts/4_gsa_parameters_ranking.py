@@ -6,7 +6,9 @@ from gpytGPE.utils.design import read_labels
 from gpytGPE.utils.plotting import correct
 
 CRITERION = "Si"  # possible choices are: "Si", "STi"
+EMUL_TYPE = "full"  # possible choices are: "full", "best"
 THRE = 0.01
+WATCH_METRIC = "R2Score"
 
 
 def main():
@@ -33,6 +35,7 @@ def main():
         msg += f" {label[idx]}"
     print(msg)
 
+    metric = WATCH_METRIC
     thre = THRE
 
     loadpath_sobol = sys.argv[2].rstrip("/") + "/"
@@ -40,6 +43,14 @@ def main():
 
     for idx in features_list:
         path = loadpath_sobol + f"{idx}/"
+
+        if emul_type == "best":
+            metric_score_list = np.loadtxt(path + metric + "_cv.txt", dtype=float)
+            if metric == "R2Score":
+                best_split = np.argmax(metric_score_list)
+            else:
+                best_split = np.argmin(metric_score_list)
+            path += f"{best_split}/"
 
         S = np.loadtxt(path + criterion + ".txt", dtype=float)
         S = correct(S, thre)
