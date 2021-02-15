@@ -35,6 +35,7 @@ def main():
         msg += f" {label[idx]}"
     print(msg)
 
+    emul_type = EMUL_TYPE
     metric = WATCH_METRIC
     thre = THRE
 
@@ -45,7 +46,9 @@ def main():
         path = loadpath_sobol + f"{idx}/"
 
         if emul_type == "best":
-            metric_score_list = np.loadtxt(path + metric + "_cv.txt", dtype=float)
+            metric_score_list = np.loadtxt(
+                path + metric + "_cv.txt", dtype=float
+            )
             if metric == "R2Score":
                 best_split = np.argmax(metric_score_list)
             else:
