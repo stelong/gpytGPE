@@ -8,7 +8,7 @@ import torch
 
 from gpytGPE.utils.earlystopping import EarlyStopping
 from gpytGPE.utils.metrics import MAPE, MSE, R2Score
-from gpytGPE.utils.preprocessing import Scaler
+from gpytGPE.utils.preprocessing import StandardScaler, UnitCubeScaler
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEVICE_LOAD = torch.device("cpu")
@@ -79,11 +79,11 @@ class GPEmul:
     ):
         self.scale_data = scale_data
         if self.scale_data:
-            self.scx = Scaler()
+            self.scx = UnitCubeScaler()
             self.scx.fit(X_train)
             self.X_train = self.tensorize(self.scx.transform(X_train))
 
-            self.scy = Scaler()
+            self.scy = StandardScaler()
             self.scy.fit(y_train.reshape(-1, 1))
             self.y_train = self.tensorize(
                 self.scy.transform(y_train.reshape(-1, 1)).ravel()
