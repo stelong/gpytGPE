@@ -20,13 +20,13 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     savepath += f"{split}" + "/"
     Path(savepath).mkdir(parents=True, exist_ok=True)
 
-    np.savetxt(savepath + "X_train.txt", X_train, fmt="%.6f")
-    np.savetxt(savepath + "y_train.txt", y_train, fmt="%.6f")
-    np.savetxt(savepath + "X_val.txt", X_val, fmt="%.6f")
-    np.savetxt(savepath + "y_val.txt", y_val, fmt="%.6f")
+    np.savetxt(savepath + "X_train.txt", X_train, fmt="%g")
+    np.savetxt(savepath + "y_train.txt", y_train, fmt="%g")
+    np.savetxt(savepath + "X_val.txt", X_val, fmt="%g")
+    np.savetxt(savepath + "y_val.txt", y_val, fmt="%g")
 
     emul = GPEmul(X_train, y_train)
-    emul.train(X_val, y_val, savepath=savepath, watch_metric=metric)
+    emul.train(X_val, y_val, savepath=savepath, save_losses=True, watch_metric=metric)
     emul.save()
 
     return emul.metric_score, emul.best_epoch
@@ -75,7 +75,7 @@ def main():
 
     metric_score_list = [results[i][0] for i in range(fold)]
     np.savetxt(
-        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%.6f"
+        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%g"
     )
 
     # ================================================================
@@ -84,8 +84,8 @@ def main():
     best_epoch_list = [results[i][1] for i in range(fold)]
     n_epochs = int(np.around(np.mean(best_epoch_list), decimals=0))
 
-    np.savetxt(savepath + "X_train.txt", X, fmt="%.6f")
-    np.savetxt(savepath + "y_train.txt", y, fmt="%.6f")
+    np.savetxt(savepath + "X_train.txt", X, fmt="%g")
+    np.savetxt(savepath + "y_train.txt", y, fmt="%g")
 
     emul = GPEmul(X, y)
     emul.train(
