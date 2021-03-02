@@ -15,6 +15,7 @@ DEVICE_LOAD = torch.device("cpu")
 FILENAME = "gpe.pth"
 LEARN_NOISE = False
 LEARNING_RATE = 0.1
+LOG_TRANSFORM = False
 MAX_EPOCHS = 1000
 METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
 N_DRAWS = 1000
@@ -83,11 +84,9 @@ class GPEmul:
             self.scx.fit(X_train)
             self.X_train = self.tensorize(self.scx.transform(X_train))
 
-            self.scy = StandardScaler()
-            self.scy.fit(y_train.reshape(-1, 1))
-            self.y_train = self.tensorize(
-                self.scy.transform(y_train.reshape(-1, 1)).ravel()
-            )
+            self.scy = StandardScaler(log_transform=LOG_TRANSFORM)
+            self.scy.fit(y_train)
+            self.y_train = self.tensorize(self.scy.transform(y_train))
         else:
             self.X_train = self.tensorize(X_train)
             self.y_train = self.tensorize(y_train)
@@ -136,7 +135,7 @@ class GPEmul:
             self.with_val = True
             if self.scale_data:
                 X_val = self.scx.transform(X_val)
-                y_val = self.scy.transform(y_val.reshape(-1, 1)).ravel()
+                y_val = self.scy.transform(y_val)
             self.X_val = self.tensorize(X_val)
             self.y_val = self.tensorize(y_val)
         else:
@@ -332,9 +331,7 @@ class GPEmul:
             y_std = numpy.sqrt(predictions.variance.cpu().numpy())
 
         if self.scale_data:
-            y_mean, y_std = self.scy.inverse_transform_predictions(
-                y_mean, y_std
-            )
+            y_mean, y_std = self.scy.inverse_transform(y_mean, ystd_=y_std)
 
         return y_mean, y_std
 
@@ -348,6 +345,7 @@ class GPEmul:
 
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             predictions = self.likelihood(self.model(X_new))
+            y_std = numpy.sqrt(predictions.variance.cpu().numpy())
             y_samples = (
                 predictions.sample(sample_shape=torch.Size([n_draws]))
                 .cpu()
@@ -355,10 +353,13 @@ class GPEmul:
             )
 
         if self.scale_data:
+            flag = 0
+            if self.scy.log_transform:
+                flag = y_std
             for i in range(n_draws):
                 y_samples[i] = self.scy.inverse_transform(
-                    y_samples[i].reshape(-1, 1)
-                ).ravel()
+                    y_samples[i], ystd_=flag
+                )[0]
 
         return y_samples
 
