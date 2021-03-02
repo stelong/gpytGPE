@@ -7,35 +7,29 @@ class StandardScaler:
         self.mu = None
         self.sigma = None
 
-    def fit(self, X):
+    def fit(self, y):
         if self.log_transform:
-            X = np.log(X)
-        self.mu = np.mean(X, axis=0)
-        self.sigma = np.std(X, axis=0)
+            y = np.log(y)
+        self.mu = np.mean(y)
+        self.sigma = np.std(y)
 
-    def transform(self, X):
+    def transform(self, y):
         if self.log_transform:
-            X = np.log(X)
-        X_ = (X - self.mu) / self.sigma
-        return X_
+            y = np.log(y)
+        y_ = (y - self.mu) / self.sigma
+        return y_
 
-    def inverse_transform(self, X_):
-        X = self.sigma * X_ + self.mu
-        if self.log_transform:
-            X = np.exp(X)
-        return X
-
-    def inverse_transform_predictions(self, y_mean_, y_std_):
-        y_mean = self.sigma * y_mean_ + self.mu
-        y_std = self.sigma * y_std_
+    def inverse_transform(self, y_, ystd_=0):
+        y = self.sigma * y_ + self.mu
+        ystd = self.sigma * ystd_
         if self.log_transform:
             return (
-                np.exp(y_mean + 0.5 * np.power(y_std, 2)),
-                (np.exp(np.power(y_std, 2)) - 1)
-                * np.exp(2 * y_mean + np.power(y_std, 2)),
+                np.exp(y + 0.5 * np.power(ystd, 2)),
+                (np.exp(np.power(ystd, 2)) - 1)
+                * np.exp(2 * y + np.power(ystd, 2)),
             )
         else:
-            return y_mean, y_std
+            return y, ystd
 
 
 class UnitCubeScaler:
