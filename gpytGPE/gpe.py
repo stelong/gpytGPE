@@ -360,6 +360,7 @@ class GPEmul:
 
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             predictions = self.likelihood(self.model(X_new))
+            y_std = numpy.sqrt(predictions.variance.cpu().numpy())
             y_samples = (
                 predictions.sample(sample_shape=torch.Size([n_draws]))
                 .cpu()
@@ -367,7 +368,6 @@ class GPEmul:
             )
 
         if self.scale_data:
-            y_std = numpy.sqrt(predictions.variance.cpu().numpy())
             for i in range(n_draws):
                 y_samples[i] = self.scy.inverse_transform(
                     y_samples[i], ystd_=y_std
