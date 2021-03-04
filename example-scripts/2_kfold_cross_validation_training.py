@@ -26,7 +26,7 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     np.savetxt(savepath + "y_val.txt", y_val, fmt="%g")
 
     emul = GPEmul(X_train, y_train)
-    emul.train(X_val, y_val, savepath=savepath, save_losses=True, watch_metric=metric)
+    emul.train(X_val, y_val, savepath=savepath, watch_metric=metric)
     emul.save()
 
     return emul.metric_score, emul.best_epoch
@@ -57,7 +57,7 @@ def main():
     metric = WATCH_METRIC
     savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
 
-    kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
+    kf = KFold(n_splits=fold, shuffle=False, random_state=None)
 
     inputs = {
         split: (
@@ -94,7 +94,6 @@ def main():
         max_epochs=n_epochs,
         patience=n_epochs,
         savepath=savepath,
-        save_losses=True,
         straight_to_the_end=True,
         watch_metric=metric,
     )
