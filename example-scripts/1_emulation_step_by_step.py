@@ -59,7 +59,7 @@ def main():
     np.savetxt(savepath + "y_val.txt", y_val, fmt="%.6f")
 
     emul = GPEmul(X_train, y_train)
-    emul.train(X_val, y_val, savepath=savepath)
+    emul.train([], [], savepath=savepath)
 
     # ================================================================
     # (4) Saving trained GPE

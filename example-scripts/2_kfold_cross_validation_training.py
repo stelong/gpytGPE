@@ -8,9 +8,11 @@ from sklearn.model_selection import KFold
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
+from gpytGPE.utils.metrics import MAPE, MSE, R2Score
 
 FOLD = 5
 SEED = 8
+METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
 WATCH_METRIC = "R2Score"
 
 
@@ -26,10 +28,15 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     np.savetxt(savepath + "y_val.txt", y_val, fmt="%g")
 
     emul = GPEmul(X_train, y_train)
-    emul.train(X_val, y_val, savepath=savepath, watch_metric=metric)
+    emul.train([], [], savepath=savepath, watch_metric=metric)
     emul.save()
 
-    return emul.metric_score, emul.best_epoch
+    y_mean, _ = emul.predict(X_val)
+    metric_score = METRICS_DCT[metric](
+        emul.tensorize(y_val), emul.tensorize(y_mean)
+    )
+
+    return metric_score, emul.best_epoch
 
 
 def main():
@@ -51,7 +58,7 @@ def main():
     y = np.loadtxt(loadpath + "Y.txt", dtype=float)[:, int(idx_feature)]
 
     # ================================================================
-    # GPE training with cross-validation
+    # GPE training with K-fold cross-validation
     # ================================================================
     fold = FOLD
     metric = WATCH_METRIC
@@ -73,6 +80,10 @@ def main():
     }
     results = execute_task_in_parallel(cv, inputs)
 
+    # results = []  # in case "cv" function cannot be run in parallel, comment line 81 and uncomment the following
+    # for key in inputs.keys():
+    #     results.append(cv(*inputs[key]))
+
     metric_score_list = [results[i][0] for i in range(fold)]
     np.savetxt(
         savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%g"
@@ -82,7 +93,7 @@ def main():
     # GPE training using the entire dataset
     # ================================================================
     best_epoch_list = [results[i][1] for i in range(fold)]
-    n_epochs = int(np.around(np.mean(best_epoch_list), decimals=0))
+    n_epochs = int(np.max(best_epoch_list))
 
     np.savetxt(savepath + "X_train.txt", X, fmt="%g")
     np.savetxt(savepath + "y_train.txt", y, fmt="%g")
@@ -92,9 +103,7 @@ def main():
         [],
         [],
         max_epochs=n_epochs,
-        patience=n_epochs,
         savepath=savepath,
-        straight_to_the_end=True,
         watch_metric=metric,
     )
     emul.save()

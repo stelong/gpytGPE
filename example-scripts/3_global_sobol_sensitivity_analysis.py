@@ -13,8 +13,7 @@ from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import get_minmax, read_labels
 from gpytGPE.utils.plotting import gsa_box, gsa_donut
 
-CALC_SECOND_ORDER = True
-EMUL_TYPE = "full"  # possible choices are: "full", "best"
+EMUL_TYPE = "best"  # possible choices are: "full", "best"
 N = 1000
 N_DRAWS = 1000
 SEED = 8
@@ -60,7 +59,6 @@ def main():
     # ================================================================
     label = read_labels(loadpath + "ylabels.txt")
 
-    calc_second_order = CALC_SECOND_ORDER
     n = N
     n_draws = N_DRAWS
 
@@ -73,7 +71,7 @@ def main():
     problem = {"num_vars": D, "names": index_i, "bounds": I}
 
     X_sobol = saltelli.sample(
-        problem, n, calc_second_order=calc_second_order
+        problem, n, calc_second_order=True
     )  # n x (2D + 2) | if calc_second_order == False --> n x (D + 2)
     Y = emul.sample(X_sobol, n_draws=n_draws)
 
@@ -85,7 +83,7 @@ def main():
         S = sobol.analyze(
             problem,
             Y[i],
-            calc_second_order=calc_second_order,
+            calc_second_order=True,
             parallel=True,
             n_processors=multiprocessing.cpu_count(),
             seed=seed,

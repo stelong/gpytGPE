@@ -5,8 +5,8 @@ import numpy as np
 from gpytGPE.utils.design import read_labels
 from gpytGPE.utils.plotting import correct
 
-CRITERION = "Si"  # possible choices are: "Si", "STi"
-EMUL_TYPE = "full"  # possible choices are: "full", "best"
+CRITERION = "STi"  # possible choices are: "Si", "STi"
+EMUL_TYPE = "best"  # possible choices are: "full", "best"
 THRE = 0.01
 WATCH_METRIC = "R2Score"
 
