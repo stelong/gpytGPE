@@ -144,41 +144,44 @@ def gsa_donut(path, thre, index_i, ylab, savefig=False):
     ST = correct(ST, thre)
     S1 = correct(S1, thre)
 
-    ST_mean = np.array([ST[:, i].mean() for i in range(len(index_i))]).reshape(
-        1, -1
-    )
-    S1_mean = np.array([S1[:, i].mean() for i in range(len(index_i))]).reshape(
-        1, -1
-    )
+    S1_mean = np.mean(S1, axis=0)
+    ST_mean = np.mean(ST, axis=0)
 
-    sum_st = ST_mean.ravel().sum()
-    sum_s1 = S1_mean.ravel().sum()
+    sum_s1 = S1_mean.sum()
+    sum_st = ST_mean.sum()
     ho = sum_st - sum_s1
-    x = np.array(list(S1_mean.ravel() / sum_st) + [ho / sum_st])
+    x_si = np.array(list(S1_mean) + [ho])
+    x_sti = ST_mean
 
     height = 9.36111
     width = 5.91667
-    fig, axis = plt.subplots(1, 1, figsize=(2 * width / 2, 2 * height / 4))
-
-    # uncomment the following if you want different colours and not a single interpolated colour
-    # l = get_col()
-    # c_list = [l[i] for i in range(len(index_i))]
-    # colors = [get_col(c)[1] for c in c_list]
-    # colors += [interp_col(get_col('gray'), 6)[2]]
+    fig, axes = plt.subplots(1, 2, figsize=(2 * width, 2 * height / 4))
 
     c = "blue"
     colors = interp_col(get_col(c), len(index_i))
     colors += [interp_col(get_col("gray"), 6)[2]]
 
-    wedges, _ = axis.pie(
-        x,
+    wedges, _ = axes[0].pie(
+        x_si,
         radius=1,
         colors=colors,
         startangle=90,
         counterclock=False,
         wedgeprops=dict(width=0.3, edgecolor="w", linewidth=1),
+        normalize=True,
     )
-    axis.set(aspect="equal")
+    axes[0].set_title("S1", fontsize=12)
+
+    axes[1].pie(
+        x_sti,
+        radius=1,
+        colors=colors,
+        startangle=90,
+        counterclock=False,
+        wedgeprops=dict(width=0.3, edgecolor="w", linewidth=1),
+        normalize=True,
+    )
+    axes[1].set_title("ST", fontsize=12)
 
     plt.figlegend(
         wedges, index_i + ["higher-order int."], ncol=5, loc="lower center"
