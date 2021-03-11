@@ -7,7 +7,7 @@ import numpy
 import torch
 from gpytorch.kernels import MaternKernel, RBFKernel, ScaleKernel
 
-from gpytGPE.utils.earlystopping import EarlyStopping
+from gpytGPE.utils.earlystopping import EarlyStopping, analyze_losstruct
 from gpytGPE.utils.metrics import MAPE, MSE, R2Score
 from gpytGPE.utils.preprocessing import StandardScaler, UnitCubeScaler
 
@@ -27,7 +27,6 @@ PATH = "./"
 PATIENCE = 20
 SAVE_LOSSES = False
 SCALE_DATA = True
-STRAIGHT_TO_THE_END = False
 WATCH_METRIC = "R2Score"
 
 
@@ -140,7 +139,6 @@ class GPEmul:
         patience=PATIENCE,
         savepath=PATH,
         save_losses=SAVE_LOSSES,
-        straight_to_the_end=STRAIGHT_TO_THE_END,
         watch_metric=WATCH_METRIC,
     ):
         print("\nTraining emulator...")
@@ -162,7 +160,6 @@ class GPEmul:
         self.patience = patience
         self.savepath = savepath
         self.save_losses = save_losses
-        self.straight_to_the_end = straight_to_the_end
         self.watch_metric = watch_metric
         self.metric = METRICS_DCT[self.watch_metric]
 
@@ -174,9 +171,17 @@ class GPEmul:
 
         self.idx_best_list = []
         i = 0
-        while i < n_restarts:
-            self.restart_idx = i + 1
-            print("\nRestart {}...".format(self.restart_idx))
+        while i < n_restarts + 1:
+            self.restart_idx = i
+            if self.restart_idx == 0:
+                print("\nAnalyzing loss structure...")
+                self.print_msg = False
+                self.delta = 0
+                self.bellepoque = self.max_epochs - 1
+            else:
+                print(f"\nRestart {self.restart_idx}...")
+                self.print_msg = True
+
             try:
                 self.train_once()
             except RuntimeError as err:
@@ -186,14 +191,15 @@ class GPEmul:
             else:
                 i += 1
 
-                self.idx_best_list.append(self.idx_best)
-                train_loss_list.append(self.train_loss_list[self.idx_best])
-                model_state_list.append(self.best_model)
-                if self.with_val:
-                    val_loss_list.append(self.val_loss_list[self.idx_best])
-                    metric_score_list.append(
-                        self.metric_score_list[self.idx_best]
-                    )
+                if self.restart_idx > 0:
+                    self.idx_best_list.append(self.idx_best)
+                    train_loss_list.append(self.train_loss_list[self.idx_best])
+                    model_state_list.append(self.best_model)
+                    if self.with_val:
+                        val_loss_list.append(self.val_loss_list[self.idx_best])
+                        metric_score_list.append(
+                            self.metric_score_list[self.idx_best]
+                        )
 
         if self.with_val:
             idx_min = numpy.argmin(val_loss_list)
@@ -215,20 +221,24 @@ class GPEmul:
     def train_once(self):
         self.model.load_state_dict(self.init_state)
 
-        theta_inf, theta_sup = numpy.log(1e-1), numpy.log(1e1)
-        hyperparameters = {
-            "covar_module.base_kernel.raw_lengthscale": (theta_sup - theta_inf)
-            * torch.rand(self.input_size)
-            + theta_inf,
-            "covar_module.raw_outputscale": (theta_sup - theta_inf)
-            * torch.rand(1)
-            + theta_inf,
-        }
-        self.model.initialize(**hyperparameters)
-        if self.learn_noise:
-            self.likelihood.initialize(
-                raw_noise=(theta_sup - theta_inf) * torch.rand(1) + theta_inf
-            )
+        if self.restart_idx > 0:
+            theta_inf, theta_sup = numpy.log(1e-1), numpy.log(1e1)
+            hyperparameters = {
+                "covar_module.base_kernel.raw_lengthscale": (
+                    theta_sup - theta_inf
+                )
+                * torch.rand(self.input_size)
+                + theta_inf,
+                "covar_module.raw_outputscale": (theta_sup - theta_inf)
+                * torch.rand(1)
+                + theta_inf,
+            }
+            self.model.initialize(**hyperparameters)
+            if self.learn_noise:
+                self.likelihood.initialize(
+                    raw_noise=(theta_sup - theta_inf) * torch.rand(1)
+                    + theta_inf
+                )
 
         self.model.to(self.device)
 
@@ -239,7 +249,9 @@ class GPEmul:
             self.likelihood, self.model
         )
 
-        early_stopping = EarlyStopping(self.patience, self.savepath)
+        early_stopping = EarlyStopping(
+            self.patience, self.delta, self.savepath
+        )
 
         self.train_loss_list = []
         if self.with_val:
@@ -260,34 +272,34 @@ class GPEmul:
                     f" - Validation Loss: {val_loss:.4f}"
                     + f" - {self.watch_metric}: {metric_score:.4f}"
                 )
-            print(msg)
+            if self.print_msg:
+                print(msg)
 
             self.train_loss_list.append(train_loss)
             if self.with_val:
                 self.val_loss_list.append(val_loss)
                 self.metric_score_list.append(metric_score)
 
-            if self.with_val:
-                early_stopping(val_loss, self.model)
-            else:
-                early_stopping(train_loss, self.model)
+            if epoch >= self.bellepoque:
+                if self.with_val:
+                    early_stopping(val_loss, self.model)
+                else:
+                    early_stopping(train_loss, self.model)
             if early_stopping.early_stop:
                 print("Early stopping!")
                 break
-
-        if self.straight_to_the_end:
-            torch.save(
-                self.model.state_dict(), self.savepath + "checkpoint.pth"
-            )
 
         self.best_model = torch.load(self.savepath + "checkpoint.pth")
         if self.with_val:
             self.idx_best = numpy.argmin(self.val_loss_list)
         else:
-            if self.straight_to_the_end:
-                self.idx_best = self.max_epochs - 1
-            else:
-                self.idx_best = numpy.argmin(self.train_loss_list)
+            self.idx_best = numpy.argmin(self.train_loss_list)
+
+        if self.restart_idx == 0:
+            self.bellepoque, self.delta = analyze_losstruct(
+                numpy.array(self.train_loss_list)
+            )
+            print("\nDone. Now the training starts...")
 
         if self.save_losses:
             self.plot_loss()
