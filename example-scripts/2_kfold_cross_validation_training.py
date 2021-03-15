@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
-from gpytGPE.utils.metrics import MAPE, MSE, R2Score
+from gpytGPE.utils.metrics import ISEScore, MAPE, MSE, R2Score
 
 FOLD = 5
 SEED = 8
@@ -31,12 +31,15 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     emul.train([], [], savepath=savepath, watch_metric=metric)
     emul.save()
 
-    y_mean, _ = emul.predict(X_val)
+    y_mean, y_std = emul.predict(X_val)
     metric_score = METRICS_DCT[metric](
         emul.tensorize(y_val), emul.tensorize(y_mean)
     )
+    ise_score = ISEScore(
+        emul.tensorize(y_val), emul.tensorize(y_mean), emul.tensorize(y_std)
+    )
 
-    return metric_score, emul.best_epoch
+    return metric_score, ise_score, emul.best_epoch
 
 
 def main():
@@ -86,13 +89,17 @@ def main():
 
     metric_score_list = [results[i][0] for i in range(fold)]
     np.savetxt(
-        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%g"
+        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%.6f"
+    )
+    ise_score_list = [results[i][1] for i in range(fold)]
+    np.savetxt(
+        savepath + "ISEScore_cv.txt", np.array(ise_score_list), fmt="%.6f"
     )
 
     # ================================================================
     # GPE training using the entire dataset
     # ================================================================
-    best_epoch_list = [results[i][1] for i in range(fold)]
+    best_epoch_list = [results[i][2] for i in range(fold)]
     n_epochs = int(np.max(best_epoch_list))
 
     np.savetxt(savepath + "X_train.txt", X, fmt="%g")
