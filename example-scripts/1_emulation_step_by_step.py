@@ -84,9 +84,13 @@ def main():
 
     y_pred_mean, y_pred_std = emul.predict(X_test)
     r2s = R2Score(emul.tensorize(y_test), emul.tensorize(y_pred_mean))
-    ises = ISEScore(emul.tensorize(y_test), emul.tensorize(y_pred_mean), emul.tensorize(y_pred_std))
-    
-    print(f"\nStatistics on testing dataset")
+    ises = ISEScore(
+        emul.tensorize(y_test),
+        emul.tensorize(y_pred_mean),
+        emul.tensorize(y_pred_std),
+    )
+
+    print("\nStatistics on testing dataset")
     print(f"  R2 score = {r2s:.4f}")
     print(f"  ISE score = {ises:.2f} %\n")
 
@@ -103,21 +107,21 @@ def main():
     ci = 2
 
     axis.scatter(
-        np.arange(1, len(l)+1),
+        np.arange(1, len(l) + 1),
         y_test[l],
         facecolors="none",
         edgecolors="C0",
         label="observed",
     )
     axis.scatter(
-        np.arange(1, len(l)+1),
+        np.arange(1, len(l) + 1),
         y_pred_mean[l],
         facecolors="C0",
         s=16,
         label="predicted",
     )
     axis.errorbar(
-        np.arange(1, len(l)+1),
+        np.arange(1, len(l) + 1),
         y_pred_mean[l],
         yerr=ci * y_pred_std[l],
         c="C0",

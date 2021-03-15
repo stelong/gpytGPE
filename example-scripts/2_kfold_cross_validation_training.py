@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
-from gpytGPE.utils.metrics import ISEScore, MAPE, MSE, R2Score
+from gpytGPE.utils.metrics import MAPE, MSE, ISEScore, R2Score
 
 FOLD = 5
 SEED = 8
