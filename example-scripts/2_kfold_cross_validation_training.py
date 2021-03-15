@@ -83,7 +83,7 @@ def main():
     }
     results = execute_task_in_parallel(cv, inputs)
 
-    # results = []  # in case "cv" function cannot be run in parallel, comment line 81 and uncomment the following
+    # results = []  # in case "cv" function cannot be run in parallel, comment line 84 and uncomment the following
     # for key in inputs.keys():
     #     results.append(cv(*inputs[key]))
 
