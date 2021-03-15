@@ -1,12 +1,9 @@
 import torch
 
 
-def R2Score(y, y_pred):
-    n_samples = y.size()[0]
-    sum_of_sq_errors = torch.sum(torch.pow(y - y_pred, 2)).item()
-    y_sq_sum = torch.sum(torch.pow(y, 2)).item()
-    y_sum = torch.sum(y).item()
-    return 1.0 - sum_of_sq_errors / (y_sq_sum - (y_sum ** 2) / n_samples)
+def ISEScore(y_true, y_pred_mean, y_pred_std):
+    ise = torch.abs(y_true - y_pred_mean) / y_pred_std
+    return 100.0 * len(torch.where(ise < 2.0)[0]) / len(ise)
 
 
 def MAPE(y, y_pred):
@@ -29,3 +26,11 @@ def MSE(y, y_pred):
     squared_errors = torch.pow(y - y_pred, 2)
     sum_of_sq_errors = torch.sum(squared_errors).item()
     return sum_of_sq_errors / n_samples
+
+
+def R2Score(y, y_pred):
+    n_samples = y.size()[0]
+    sum_of_sq_errors = torch.sum(torch.pow(y - y_pred, 2)).item()
+    y_sq_sum = torch.sum(torch.pow(y, 2)).item()
+    y_sum = torch.sum(y).item()
+    return 1.0 - sum_of_sq_errors / (y_sq_sum - (y_sum ** 2) / n_samples)
