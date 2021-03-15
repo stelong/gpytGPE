@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import read_labels
-from gpytGPE.utils.metrics import R2Score
+from gpytGPE.utils.metrics import ISEScore, R2Score
 from gpytGPE.utils.plotting import plot_dataset
 
 SEED = 8
@@ -69,7 +69,7 @@ def main():
     # ================================================================
     # (5) Loading already trained GPE
     # ================================================================
-    # NOTE: you need exactely the same training dataset used in (3)
+    # NOTE: you need exactly the same training dataset used in (3)
     # ================================================================
     loadpath = savepath
     emul = GPEmul.load(X_train, y_train, loadpath)
@@ -84,7 +84,11 @@ def main():
 
     y_pred_mean, y_pred_std = emul.predict(X_test)
     r2s = R2Score(emul.tensorize(y_test), emul.tensorize(y_pred_mean))
-    print(f"\nAccuracy on testing dataset: R2Score = {r2s:.6f}")
+    ises = ISEScore(emul.tensorize(y_test), emul.tensorize(y_pred_mean), emul.tensorize(y_pred_std))
+    
+    print(f"\nStatistics on testing dataset")
+    print(f"  R2 score = {r2s:.4f}")
+    print(f"  ISE score = {ises:.2f} %\n")
 
     # ================================================================
     # (7) Plotting predictions vs observations
@@ -96,24 +100,24 @@ def main():
     l = np.argsort(
         y_pred_mean
     )  # let's sort predicted values for a better visualisation
-    ci = 3
+    ci = 2
 
     axis.scatter(
-        np.arange(len(l)),
+        np.arange(1, len(l)+1),
         y_test[l],
         facecolors="none",
         edgecolors="C0",
         label="observed",
     )
     axis.scatter(
-        np.arange(len(l)),
+        np.arange(1, len(l)+1),
         y_pred_mean[l],
         facecolors="C0",
         s=16,
         label="predicted",
     )
     axis.errorbar(
-        np.arange(len(l)),
+        np.arange(1, len(l)+1),
         y_pred_mean[l],
         yerr=ci * y_pred_std[l],
         c="C0",
@@ -125,7 +129,7 @@ def main():
     axis.set_xticks([])
     axis.set_xticklabels([])
     axis.set_ylabel(ylabels[int(idx_feature)], fontsize=12)
-    axis.set_title(f"R2Score = {r2s:.6f}", fontsize=12)
+    axis.set_title(f"R2Score = {r2s:.4f} | ISEScore = {ises:.2f}", fontsize=12)
     axis.legend(loc="upper left")
 
     fig.tight_layout()
