@@ -21,6 +21,7 @@ LEARNING_RATE = 0.1
 LOG_TRANSFORM = False
 MAX_EPOCHS = 1000
 METRICS_DCT = {
+    "EV": torchmetrics.ExplainedVariance(),
     "MSE": torchmetrics.MeanSquaredError(),
     "R2Score": torchmetrics.R2Score(),
 }
