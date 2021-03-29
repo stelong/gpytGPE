@@ -1,7 +1,7 @@
 import torch
 
 
-def ISEScore(y_true, y_pred_mean, y_pred_std):
+def IndependentStandardError(y_true, y_pred_mean, y_pred_std):
     ise = torch.abs(y_true - y_pred_mean) / y_pred_std
     return 100.0 * len(torch.where(ise < 2.0)[0]) / len(ise)
 
