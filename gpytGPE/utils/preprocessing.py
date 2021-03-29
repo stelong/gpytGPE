@@ -1,6 +1,24 @@
 import numpy as np
 
 
+class UnitCubeScaler:
+    def __init__(self):
+        self.a = None
+        self.b = None
+
+    def fit(self, X):
+        self.a = np.min(X, axis=0)
+        self.b = np.max(X, axis=0)
+
+    def transform(self, X):
+        X_ = (X - self.a) / (self.b - self.a)
+        return X_
+
+    def inverse_transform(self, X_):
+        X = (self.b - self.a) * X_ + self.a
+        return X
+
+
 class StandardScaler:
     def __init__(self, log_transform=False):
         self.log_transform = log_transform
@@ -30,21 +48,3 @@ class StandardScaler:
             )
         else:
             return y, ystd
-
-
-class UnitCubeScaler:
-    def __init__(self):
-        self.a = None
-        self.b = None
-
-    def fit(self, X):
-        self.a = np.min(X, axis=0)
-        self.b = np.max(X, axis=0)
-
-    def transform(self, X):
-        X_ = (X - self.a) / (self.b - self.a)
-        return X_
-
-    def inverse_transform(self, X_):
-        X = (self.b - self.a) * X_ + self.a
-        return X
