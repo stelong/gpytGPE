@@ -13,7 +13,7 @@ from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import get_minmax, read_labels
 from gpytGPE.utils.plotting import gsa_box, gsa_donut
 
-EMUL_TYPE = "best"  # possible choices are: "full", "best"
+EMUL_TYPE = "full"  # possible choices are: "full", "best"
 N = 1000
 N_DRAWS = 1000
 SEED = 8
