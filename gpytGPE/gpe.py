@@ -5,10 +5,10 @@ import matplotlib.gridspec as grsp
 import matplotlib.pyplot as plt
 import numpy
 import torch
+import torchmetrics
 from gpytorch.kernels import MaternKernel, RBFKernel, ScaleKernel
 
 from gpytGPE.utils.earlystopping import EarlyStopping, analyze_losstruct
-from gpytGPE.utils.metrics import MAPE, MSE, R2Score
 from gpytGPE.utils.preprocessing import StandardScaler, UnitCubeScaler
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,18 +20,20 @@ LEARN_NOISE = True
 LEARNING_RATE = 0.1
 LOG_TRANSFORM = False
 MAX_EPOCHS = 1000
-METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
+METRICS_DCT = {
+    "MSE": torchmetrics.MeanSquaredError(),
+    "R2Score": torchmetrics.R2Score(),
+}
 N_DRAWS = 1000
 N_RESTARTS = 10
 PATH = "./"
 PATIENCE = 8
 SAVE_LOSSES = False
-SCALE_DATA = True
 WATCH_METRIC = "R2Score"
 
 
 class LinearMean(gpytorch.means.Mean):
-    def __init__(self, input_size, data_mean, batch_shape=torch.Size()):
+    def __init__(self, input_size, batch_shape=torch.Size()):
         super().__init__()
         self.register_parameter(
             name="weights",
@@ -41,9 +43,7 @@ class LinearMean(gpytorch.means.Mean):
         )
         self.register_parameter(
             name="bias",
-            parameter=torch.nn.Parameter(
-                data_mean * torch.ones(*batch_shape, 1)
-            ),
+            parameter=torch.nn.Parameter(torch.zeros(*batch_shape, 1)),
         )
 
     def forward(self, x):
@@ -78,37 +78,24 @@ class GPEmul:
         device=DEVICE,
         learn_noise=LEARN_NOISE,
         kernel=KERNEL,
-        scale_data=SCALE_DATA,
         log_transform=LOG_TRANSFORM,
     ):
-        self.scale_data = scale_data
-        self.log_transform = log_transform
-        if self.scale_data:
-            self.scx = UnitCubeScaler()
-            self.scx.fit(X_train)
-            self.X_train = self.tensorize(self.scx.transform(X_train))
+        self.scx = UnitCubeScaler()
+        self.scx.fit(X_train)
+        self.X_train = self.tensorize(self.scx.transform(X_train))
 
-            self.scy = StandardScaler(log_transform=self.log_transform)
-            self.scy.fit(y_train)
-            self.y_train = self.tensorize(self.scy.transform(y_train))
-        else:
-            if self.log_transform:
-                print(
-                    "\nWarning: attempting to log-transform with scale_data=False. Data will not be scaled."
-                )
-            self.X_train = self.tensorize(X_train)
-            self.y_train = self.tensorize(y_train)
+        self.log_transform = log_transform
+        self.scy = StandardScaler(log_transform=self.log_transform)
+        self.scy.fit(y_train)
+        self.y_train = self.tensorize(self.scy.transform(y_train))
 
         self.device = device
-        self.data_mean = 0.0 if self.scale_data else numpy.mean(y_train)
         self.n_samples = X_train.shape[0]
         self.input_size = X_train.shape[1] if len(X_train.shape) > 1 else 1
         self.learn_noise = learn_noise
 
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
-        self.linear_model = LinearMean(
-            input_size=self.input_size, data_mean=self.data_mean
-        )
+        self.linear_model = LinearMean(input_size=self.input_size)
         self.kernel = ScaleKernel(
             KERNEL_DCT[kernel](ard_num_dims=self.input_size)
         )
@@ -146,11 +133,8 @@ class GPEmul:
             y_val, numpy.ndarray
         ):
             self.with_val = True
-            if self.scale_data:
-                X_val = self.scx.transform(X_val)
-                y_val = self.scy.transform(y_val)
-            self.X_val = self.tensorize(X_val)
-            self.y_val = self.tensorize(y_val)
+            self.X_val = self.tensorize(self.scx.transform(X_val))
+            self.y_val = self.tensorize(self.scy.transform(y_val))
         else:
             self.with_val = False
 
@@ -296,9 +280,14 @@ class GPEmul:
             self.idx_best = numpy.argmin(self.train_loss_list)
 
         if self.restart_idx == 0:
-            self.bellepoque, self.delta = analyze_losstruct(
-                numpy.array(self.train_loss_list)
-            )
+            if self.with_val:
+                self.bellepoque, self.delta = analyze_losstruct(
+                    numpy.array(self.val_loss_list)
+                )
+            else:
+                self.bellepoque, self.delta = analyze_losstruct(
+                    numpy.array(self.train_loss_list)
+                )
             print("\nDone. Now the training starts...")
 
         if self.save_losses:
@@ -325,9 +314,9 @@ class GPEmul:
             val_loss = -self.criterion(self.model(self.X_val), self.y_val)
             predictions = self.likelihood(self.model(self.X_val))
             y_pred = predictions.mean
-            metric_score = self.metric(self.y_val, y_pred)
+            metric_score = self.metric(y_pred, self.y_val)
 
-        return val_loss.item(), metric_score
+        return val_loss.item(), metric_score.item()
 
     def print_stats(self):
         torch.set_printoptions(sci_mode=False)
@@ -348,17 +337,14 @@ class GPEmul:
         self.model.eval()
         self.likelihood.eval()
 
-        if self.scale_data:
-            X_new = self.scx.transform(X_new)
-        X_new = self.tensorize(X_new).to(self.device)
+        X_new = self.tensorize(self.scx.transform(X_new)).to(self.device)
 
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             predictions = self.likelihood(self.model(X_new))
             y_mean = predictions.mean.cpu().numpy()
             y_std = numpy.sqrt(predictions.variance.cpu().numpy())
 
-        if self.scale_data:
-            y_mean, y_std = self.scy.inverse_transform(y_mean, ystd_=y_std)
+        y_mean, y_std = self.scy.inverse_transform(y_mean, ystd_=y_std)
 
         return y_mean, y_std
 
@@ -366,9 +352,7 @@ class GPEmul:
         self.model.eval()
         self.likelihood.eval()
 
-        if self.scale_data:
-            X_new = self.scx.transform(X_new)
-        X_new = self.tensorize(X_new).to(self.device)
+        X_new = self.tensorize(self.scx.transform(X_new)).to(self.device)
 
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             predictions = self.likelihood(self.model(X_new))
@@ -379,11 +363,10 @@ class GPEmul:
                 .numpy()
             )
 
-        if self.scale_data:
-            for i in range(n_draws):
-                y_samples[i] = self.scy.inverse_transform(
-                    y_samples[i], ystd_=y_std
-                )[0]
+        for i in range(n_draws):
+            y_samples[i] = self.scy.inverse_transform(
+                y_samples[i], ystd_=y_std
+            )[0]
 
         return y_samples
 
