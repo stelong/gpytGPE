@@ -4,15 +4,21 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import torchmetrics
 from sklearn.model_selection import KFold
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
-from gpytGPE.utils.metrics import MAPE, MSE, ISEScore, R2Score
+from gpytGPE.utils.metrics import IndependentStandardError
 
 FOLD = 5
 SEED = 8
-METRICS_DCT = {"MAPE": MAPE, "MSE": MSE, "R2Score": R2Score}
+METRICS_DCT = {
+    "ISE": IndependentStandardError,
+    "EV": torchmetrics.ExplainedVariance(),
+    "MSE": torchmetrics.MeanSquaredError(),
+    "R2Score": torchmetrics.R2Score(),
+}
 WATCH_METRIC = "R2Score"
 
 
@@ -31,15 +37,18 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
     emul.train([], [], savepath=savepath, watch_metric=metric)
     emul.save()
 
-    y_mean, y_std = emul.predict(X_val)
-    metric_score = METRICS_DCT[metric](
-        emul.tensorize(y_val), emul.tensorize(y_mean)
+    y_pred_mean, y_pred_std = emul.predict(X_val)
+
+    score = METRICS_DCT[metric](
+        emul.tensorize(y_pred_mean), emul.tensorize(y_val)
     )
-    ise_score = ISEScore(
-        emul.tensorize(y_val), emul.tensorize(y_mean), emul.tensorize(y_std)
+    ise = METRICS_DCT["ISE"](
+        emul.tensorize(y_val),
+        emul.tensorize(y_pred_mean),
+        emul.tensorize(y_pred_std),
     )
 
-    return metric_score, ise_score, emul.best_epoch
+    return (score, ise), emul.best_epoch
 
 
 def main():
@@ -83,23 +92,24 @@ def main():
     }
     results = execute_task_in_parallel(cv, inputs)
 
-    # results = []  # in case "cv" function cannot be run in parallel, comment line 84 and uncomment the following
+    # in case "cv" function cannot be run in parallel, comment line 93 and uncomment the following block
+    # results = []
     # for key in inputs.keys():
     #     results.append(cv(*inputs[key]))
 
-    metric_score_list = [results[i][0] for i in range(fold)]
+    metric_list = [results[i][0][0] for i in range(fold)]
     np.savetxt(
-        savepath + metric + "_cv.txt", np.array(metric_score_list), fmt="%.6f"
+        savepath + metric + "_cv.txt",
+        np.array(metric_list),
+        fmt="%.6f",
     )
-    ise_score_list = [results[i][1] for i in range(fold)]
-    np.savetxt(
-        savepath + "ISEScore_cv.txt", np.array(ise_score_list), fmt="%.6f"
-    )
+    ise_list = [results[i][0][1] for i in range(fold)]
+    np.savetxt(savepath + "ISE_cv.txt", np.array(ise_list), fmt="%.6f")
 
     # ================================================================
     # GPE training using the entire dataset
     # ================================================================
-    best_epoch_list = [results[i][2] for i in range(fold)]
+    best_epoch_list = [results[i][1] for i in range(fold)]
     n_epochs = int(np.max(best_epoch_list))
 
     np.savetxt(savepath + "X_train.txt", X, fmt="%g")
