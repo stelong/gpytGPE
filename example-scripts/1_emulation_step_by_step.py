@@ -16,7 +16,6 @@ from gpytGPE.utils.plotting import plot_dataset
 SEED = 8
 METRICS_DCT = {
     "ISE": IndependentStandardError,
-    "EV": torchmetrics.ExplainedVariance(),
     "MSE": torchmetrics.MeanSquaredError(),
     "R2Score": torchmetrics.R2Score(),
 }

@@ -15,7 +15,6 @@ FOLD = 5
 SEED = 8
 METRICS_DCT = {
     "ISE": IndependentStandardError,
-    "EV": torchmetrics.ExplainedVariance(),
     "MSE": torchmetrics.MeanSquaredError(),
     "R2Score": torchmetrics.R2Score(),
 }
@@ -92,7 +91,7 @@ def main():
     }
     results = execute_task_in_parallel(cv, inputs)
 
-    # in case "cv" function cannot be run in parallel, comment line 93 and uncomment the following block
+    # in case "cv" function cannot be run in parallel, comment line 92 and uncomment the following block
     # results = []
     # for key in inputs.keys():
     #     results.append(cv(*inputs[key]))
