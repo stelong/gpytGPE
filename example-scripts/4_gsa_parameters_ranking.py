@@ -9,6 +9,7 @@ CRITERION = "STi"  # possible choices are: "Si", "STi"
 EMUL_TYPE = "full"  # possible choices are: "full", "best"
 THRE = 0.01
 WATCH_METRIC = "R2Score"
+HIGHEST_IS_BEST = True
 
 
 def main():
@@ -36,7 +37,8 @@ def main():
     print(msg)
 
     emul_type = EMUL_TYPE
-    metric = WATCH_METRIC
+    metric_name = WATCH_METRIC
+    metric_type = HIGHEST_IS_BEST
     thre = THRE
 
     loadpath_sobol = sys.argv[2].rstrip("/") + "/"
@@ -47,9 +49,9 @@ def main():
 
         if emul_type == "best":
             metric_score_list = np.loadtxt(
-                path + metric + "_cv.txt", dtype=float
+                path + metric_name + "_cv.txt", dtype=float
             )
-            if metric == "R2Score":
+            if metric_type:
                 best_split = np.argmax(metric_score_list)
             else:
                 best_split = np.argmin(metric_score_list)

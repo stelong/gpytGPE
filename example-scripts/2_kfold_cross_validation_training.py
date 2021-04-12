@@ -9,15 +9,14 @@ from sklearn.model_selection import KFold
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.concurrent import execute_task_in_parallel
-from gpytGPE.utils.metrics import IndependentStandardError
+from gpytGPE.utils.metrics import IndependentStandardError as ISE
 
 FOLD = 5
 SEED = 8
 METRICS_DCT = {
-    "ISE": IndependentStandardError,
     "MSE": torchmetrics.MeanSquaredError(),
     "R2Score": torchmetrics.R2Score(),
-}
+}  # you can expand this dictionary with other metrics from torchmetrics you are intrested in monitoring
 WATCH_METRIC = "R2Score"
 
 
@@ -38,10 +37,8 @@ def cv(X_train, y_train, X_val, y_val, split, savepath, metric):
 
     y_pred_mean, y_pred_std = emul.predict(X_val)
 
-    score = METRICS_DCT[metric](
-        emul.tensorize(y_pred_mean), emul.tensorize(y_val)
-    )
-    ise = METRICS_DCT["ISE"](
+    score = metric(emul.tensorize(y_pred_mean), emul.tensorize(y_val))
+    ise = ISE(
         emul.tensorize(y_val),
         emul.tensorize(y_pred_mean),
         emul.tensorize(y_pred_std),
@@ -72,7 +69,8 @@ def main():
     # GPE training with K-fold cross-validation
     # ================================================================
     fold = FOLD
-    metric = WATCH_METRIC
+    metric_name = WATCH_METRIC
+    metric = METRICS_DCT[metric_name]
     savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
 
     kf = KFold(n_splits=fold, shuffle=False, random_state=None)
@@ -91,14 +89,14 @@ def main():
     }
     results = execute_task_in_parallel(cv, inputs)
 
-    # in case "cv" function cannot be run in parallel, comment line 92 and uncomment the following block
+    # in case "cv" function cannot be run in parallel, comment line 90 and uncomment the following block
     # results = []
     # for key in inputs.keys():
     #     results.append(cv(*inputs[key]))
 
     metric_list = [results[i][0][0] for i in range(fold)]
     np.savetxt(
-        savepath + metric + "_cv.txt",
+        savepath + metric_name + "_cv.txt",
         np.array(metric_list),
         fmt="%.6f",
     )

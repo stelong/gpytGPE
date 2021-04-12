@@ -19,6 +19,7 @@ N_DRAWS = 1000
 SEED = 8
 THRE = 0.01
 WATCH_METRIC = "R2Score"
+HIGHEST_IS_BEST = True
 
 
 def main():
@@ -35,15 +36,16 @@ def main():
     # ================================================================
     emul_type = EMUL_TYPE
     idx_feature = sys.argv[2]
-    metric = WATCH_METRIC
+    metric_name = WATCH_METRIC
+    metric_type = HIGHEST_IS_BEST
     loadpath = sys.argv[1].rstrip("/") + "/"
     savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
 
     if emul_type == "best":
         metric_score_list = np.loadtxt(
-            savepath + metric + "_cv.txt", dtype=float
+            savepath + metric_name + "_cv.txt", dtype=float
         )
-        if metric == "R2Score":
+        if metric_type:
             best_split = np.argmax(metric_score_list)
         else:
             best_split = np.argmin(metric_score_list)

@@ -10,15 +10,14 @@ from sklearn.model_selection import train_test_split
 
 from gpytGPE.gpe import GPEmul
 from gpytGPE.utils.design import read_labels
-from gpytGPE.utils.metrics import IndependentStandardError
+from gpytGPE.utils.metrics import IndependentStandardError as ISE
 from gpytGPE.utils.plotting import plot_dataset
 
 SEED = 8
 METRICS_DCT = {
-    "ISE": IndependentStandardError,
     "MSE": torchmetrics.MeanSquaredError(),
     "R2Score": torchmetrics.R2Score(),
-}
+}  # you can expand this dictionary with other metrics from torchmetrics you are intrested in monitoring
 WATCH_METRIC = "R2Score"
 
 
@@ -70,7 +69,10 @@ def main():
     np.savetxt(savepath + "X_test.txt", X_test, fmt="%.6g")
     np.savetxt(savepath + "y_test.txt", y_test, fmt="%.6g")
 
-    metric = WATCH_METRIC  # choose any regression metric from torchmetrics
+    metric_name = WATCH_METRIC
+    metric = METRICS_DCT[
+        metric_name
+    ]  # initialise the chosen regression metric from torchmetrics
 
     # There are two possible ways of training a GPE:
     #
@@ -112,18 +114,16 @@ def main():
         mean_list.append(y_pred_mean)
         std_list.append(y_pred_std)
 
-        score = METRICS_DCT[metric](
-            emul.tensorize(y_pred_mean), emul.tensorize(y_test)
-        )
+        score = metric(emul.tensorize(y_pred_mean), emul.tensorize(y_test))
         score_list.append(score)
-        ise = METRICS_DCT["ISE"](
+        ise = ISE(
             emul.tensorize(y_test),
             emul.tensorize(y_pred_mean),
             emul.tensorize(y_pred_std),
         )
         ise_list.append(ise)
         print(f"\nStatistics on test set for GPE trained {tags[i]}:")
-        print(f"  {metric} = {score:.4f}")
+        print(f"  {metric_name} = {score:.4f}")
         print(f"  ISE = {ise:.2f} %\n")
 
     # ================================================================
@@ -170,7 +170,7 @@ def main():
         axes[i].set_xticklabels([])
         axes[i].set_ylabel(ylabels[int(idx_feature)], fontsize=12)
         axes[i].set_title(
-            f"GPE {tags[i]} | {metric} = {score_list[i]:.4f} | ISE = {ise_list[i]:.2f} %",
+            f"GPE {tags[i]} | {metric_name} = {score_list[i]:.4f} | ISE = {ise_list[i]:.2f} %",
             fontsize=12,
         )
         axes[i].legend(loc="upper left")
