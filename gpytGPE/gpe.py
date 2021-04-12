@@ -20,16 +20,12 @@ LEARN_NOISE = True
 LEARNING_RATE = 0.1
 LOG_TRANSFORM = False
 MAX_EPOCHS = 1000
-METRICS_DCT = {
-    "MSE": torchmetrics.MeanSquaredError(),
-    "R2Score": torchmetrics.R2Score(),
-}
 N_DRAWS = 1000
 N_RESTARTS = 10
 PATH = "./"
 PATIENCE = 8
 SAVE_LOSSES = False
-WATCH_METRIC = "R2Score"
+WATCH_METRIC = torchmetrics.R2Score()
 
 
 class LinearMean(gpytorch.means.Mean):
@@ -144,8 +140,8 @@ class GPEmul:
         self.patience = patience
         self.savepath = savepath
         self.save_losses = save_losses
-        self.watch_metric = watch_metric
-        self.metric = METRICS_DCT[self.watch_metric]
+        self.metric = watch_metric
+        self.metric_name = self.metric.__class__.__name__
 
         train_loss_list = []
         model_state_list = []
@@ -254,7 +250,7 @@ class GPEmul:
             if self.with_val:
                 msg += (
                     f" - Validation Loss: {val_loss:.4f}"
-                    + f" - {self.watch_metric}: {metric_score:.4f}"
+                    + f" - {self.metric_name}: {metric_score:.4f}"
                 )
             if self.print_msg:
                 print(msg)
@@ -330,7 +326,7 @@ class GPEmul:
         if self.learn_noise:
             msg += f"\nLikelihood noise: {self.likelihood.noise_covar.noise.data.squeeze():.4f}"
         if self.with_val:
-            msg += f"\n{self.watch_metric}: {self.metric_score:.4f}"
+            msg += f"\n{self.metric_name}: {self.metric_score:.4f}"
         print(msg)
 
     def predict(self, X_new):
@@ -377,7 +373,7 @@ class GPEmul:
             vectors.append(self.val_loss_list)
             ylabels.append("Validation loss")
             vectors.append(self.metric_score_list)
-            ylabels.append(self.watch_metric)
+            ylabels.append(self.metric_name)
         n = len(vectors)
 
         height = 9.36111
