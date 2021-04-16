@@ -194,7 +194,7 @@ def gsa_donut(path, thre, index_i, ylab, savefig=False):
     return
 
 
-def plot_dataset(Xdata, Ydata, xlabels, ylabels, color="C0"):
+def plot_dataset(Xdata, Ydata, xlabels, ylabels, savepath):
     """Plot Y high-dimensional dataset by pairwise plotting its features against each X dataset's feature.
     Args:
             - Xdata: n*m1 matrix
@@ -216,7 +216,7 @@ def plot_dataset(Xdata, Ydata, xlabels, ylabels, color="C0"):
     )
     for i, axis in enumerate(axes.flatten()):
         axis.scatter(
-            Xdata[:, i % in_dim], Ydata[:, i // in_dim], fc=color, ec=color
+            Xdata[:, i % in_dim], Ydata[:, i // in_dim], fc="C0", ec="C0"
         )
         inf = min(Xdata[:, i % in_dim])
         sup = max(Xdata[:, i % in_dim])
@@ -228,5 +228,5 @@ def plot_dataset(Xdata, Ydata, xlabels, ylabels, color="C0"):
         if i % in_dim == 0:
             axis.set_ylabel(ylabels[i // in_dim])
     plt.suptitle("Sample dimension = {} points".format(sample_dim))
-    plt.show()
+    plt.savefig(savepath + "X_vs_Y.png", bbox_inches="tight", dpi=300)
     return
