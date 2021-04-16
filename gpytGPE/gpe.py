@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import gpytorch
-import matplotlib.gridspec as grsp
 import matplotlib.pyplot as plt
 import numpy
 import torch
@@ -270,23 +269,18 @@ class GPEmul:
                 break
 
         self.best_model = torch.load(self.savepath + "checkpoint.pth")
-        if self.with_val:
-            self.idx_best = numpy.argmin(self.val_loss_list)
-        else:
-            self.idx_best = numpy.argmin(self.train_loss_list)
+        self.idx_best = epoch - self.patience
 
         if self.restart_idx == 0:
             if self.with_val:
-                self.bellepoque, self.delta = analyze_losstruct(
-                    numpy.array(self.val_loss_list)
-                )
+                self.bellepoque, self.delta = 0, 0.0
             else:
                 self.bellepoque, self.delta = analyze_losstruct(
                     numpy.array(self.train_loss_list)
                 )
             print("\nDone. Now the training starts...")
 
-        if self.save_losses:
+        if self.save_losses and self.restart_idx > 0:
             self.plot_loss()
 
     def train_step(self):
@@ -367,30 +361,60 @@ class GPEmul:
         return y_samples
 
     def plot_loss(self):
-        ylabels = ["Training loss"]
-        vectors = [self.train_loss_list]
-        if self.with_val:
-            vectors.append(self.val_loss_list)
-            ylabels.append("Validation loss")
-            vectors.append(self.metric_score_list)
-            ylabels.append(self.metric_name)
-        n = len(vectors)
-
         height = 9.36111
         width = 5.91667
-        fig = plt.figure(figsize=(2 * width / (4 - n), 2 * height / 3))
-        gs = grsp.GridSpec(1, n)
+        if self.with_val:
+            fig, axes = plt.subplots(
+                1, 2, figsize=(2 * width / 1, 2 * height / 3)
+            )
+        else:
+            fig, axis = plt.subplots(
+                1, 1, figsize=(2 * width / 2, 2 * height / 3)
+            )
+            axes = [axis]
 
-        for i, v in enumerate(vectors):
-            axis = fig.add_subplot(gs[0, i])
-            axis.scatter(numpy.arange(1, len(v) + 1), v)
-            axis.axvline(self.idx_best + 1, c="r", ls="--", lw=0.8)
-            axis.set_xlabel("Epochs", fontsize=12)
-            axis.set_ylabel(ylabels[i], fontsize=12)
+        numpy.savetxt(
+            self.savepath + f"train_loss_restart_{self.restart_idx}.txt",
+            numpy.array(self.train_loss_list).reshape(-1, 1),
+            fmt="%.6f",
+        )
+
+        epochs = numpy.arange(1, len(self.train_loss_list) + 1)
+        axes[0].plot(
+            epochs, self.train_loss_list, zorder=1, label="training loss"
+        )
+        if self.with_val:
+            numpy.savetxt(
+                self.savepath + f"val_loss_restart_{self.restart_idx}.txt",
+                numpy.array(self.val_loss_list).reshape(-1, 1),
+                fmt="%.6f",
+            )
+            axes[0].plot(
+                epochs, self.val_loss_list, zorder=1, label="validation loss"
+            )
+
+            axes[1].plot(epochs, self.metric_score_list, zorder=1)
+            axes[1].axvline(
+                self.idx_best + 1, c="r", ls="--", lw=0.8, zorder=2
+            )
+            axes[1].set_xlabel("Epoch", fontsize=12)
+            axes[1].set_ylabel(self.metric_name, fontsize=12)
+
+        axes[0].axvline(
+            self.idx_best + 1,
+            c="r",
+            ls="--",
+            lw=0.8,
+            zorder=2,
+            label=f"best epoch = {self.idx_best+1}",
+        )
+        axes[0].set_xlabel("Epoch", fontsize=12)
+        axes[0].set_ylabel("Loss", fontsize=12)
+        axes[0].legend()
 
         fig.tight_layout()
         plt.savefig(
-            self.savepath + f"loss_vs_epochs_restart_{self.restart_idx}.pdf",
+            self.savepath + f"loss_vs_epoch_restart_{self.restart_idx}.pdf",
             bbox_inches="tight",
             dpi=1000,
         )
