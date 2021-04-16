@@ -37,9 +37,12 @@ def main():
     X = np.loadtxt(loadpath + "X.txt", dtype=float)
     Y = np.loadtxt(loadpath + "Y.txt", dtype=float)
 
+    savepath = sys.argv[3].rstrip("/") + "/"
+    Path(savepath).mkdir(parents=True, exist_ok=True)
+
     xlabels = read_labels(loadpath + "xlabels.txt")
     ylabels = read_labels(loadpath + "ylabels.txt")
-    plot_dataset(X, Y, xlabels, ylabels)
+    plot_dataset(X, Y, xlabels, ylabels, savepath=savepath)
 
     # ================================================================
     # (2) Building an example training, validation and test sets
@@ -56,10 +59,7 @@ def main():
         X_, y_, test_size=0.2, random_state=seed
     )
 
-    # ================================================================
-    # (3) Training a Gaussian Process Emulator (GPE)
-    # ================================================================
-    savepath = sys.argv[3].rstrip("/") + "/" + idx_feature + "/"
+    savepath += idx_feature + "/"
     Path(savepath).mkdir(parents=True, exist_ok=True)
 
     np.savetxt(savepath + "X_train.txt", X_train, fmt="%.6g")
@@ -69,6 +69,9 @@ def main():
     np.savetxt(savepath + "X_test.txt", X_test, fmt="%.6g")
     np.savetxt(savepath + "y_test.txt", y_test, fmt="%.6g")
 
+    # ================================================================
+    # (3) Training a Gaussian Process Emulator (GPE)
+    # ================================================================
     metric_name = WATCH_METRIC
     metric = METRICS_DCT[
         metric_name
@@ -78,11 +81,15 @@ def main():
     #
     # (A) either against a validation set (e.g. by validation loss)
     emul_a = GPEmul(X_train, y_train)
-    emul_a.train(X_val, y_val, savepath=savepath, watch_metric=metric)
+    emul_a.train(
+        X_val, y_val, savepath=savepath, watch_metric=metric, save_losses=True
+    )
     #
     # (B) or against nothing (e.g. by training loss)
     emul_b = GPEmul(X_train, y_train)
-    emul_b.train([], [], savepath=savepath, watch_metric=metric)
+    emul_b.train(
+        [], [], savepath=savepath, watch_metric=metric, save_losses=False
+    )
 
     # ================================================================
     # (4) Saving a trained GPE
@@ -179,7 +186,9 @@ def main():
     axes[1].set_ylim([np.min(inf_bound), np.max(sup_bound)])
 
     fig.tight_layout()
-    plt.show()
+    plt.savefig(
+        savepath + "inference_on_testset.pdf", bbox_inches="tight", dpi=1000
+    )
 
 
 if __name__ == "__main__":
