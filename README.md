@@ -8,7 +8,7 @@ The GPE training can be performed either against a validation set (by validation
 
 At each training epoch, it is possible to monitor training loss, validation loss and a metric of interest (the last two only if applicable i.e., if traning against a validation set). Available metrics are all the regression metrics provided by the third-party, Torchmetrics (https://torchmetrics.readthedocs.io/en/latest/) library. Losses over epochs plots can be automatically outputed. It is also possible to switch between GPE's noise-free and noisy implementations. Data is automatically scaled and backtransformed within the code (input scaled to unit cube and output standardized). The user can additionally opt for log-transforming the output before it gets standardized before training.
 
-The entire code can run on both CPU and GPU. The cross-validation training loop is implemented to run in parallel with multiprocessing.
+The entire code runs on both CPU and GPU. The cross-validation training loop is implemented to run in parallel with multiprocessing.
 
 ---
 ## Information
@@ -56,17 +56,17 @@ pip install .
 ```
 cd example-scripts/
 ```
-To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `data/`.
+To run the example scripts showing the full library capabilities you need to format your dataset as plain text without commas into two files: `X.txt` and `Y.txt`. Additionally, you need to provide labels for each input parameter and output feature as plain text into two separate files: `xlabels.txt` and `ylabels.txt`. An example dataset is provided in `data/test/`.
 
 
 ### Script 1: emulation step-by-step
-This first script guides you through common steps (0)-(7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. `IDX` is an integer representing the column index (counting from 0) of the selected feature to be emulated. The input dataset is automatically split such that 80% of it is used for training while the remaining 20% is used for validation/testing. 
+This first script guides you through common steps (0)-(7) to make towards a complete emulation of the map *X -> Y[:, IDX]*, from dataset loading to actual training to emulator testing. `IDX` is an integer representing the column index (counting from 0) of the selected feature to be emulated. The input dataset is automatically split such that 20% of it is used for testing, while the remaining 80% is again split in 20% (validation) and 80% (training). 
 
 To run the script, type:
 ```
 python3 1_emulation_step_by_step.py /absolute/path/to/input/ IDX /absolute/path/to/output/
 ```
-Notice that in our specific case, `/absolute/path/to/input/` is `data/`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with a trained emulator object `gpe.pth` and training dataset files `X_train.txt`, `y_train.txt`.
+Notice that in our specific case, `/absolute/path/to/input/` is `data/test`. After the run completes, folder `IDX/` will be created in `/absolute/path/to/output/` and filled with a trained emulator object `gpe.pth` and training dataset files `X_train.txt`, `y_train.txt`.
 
 The emulator base class is `GPEmul`. An emulator object can be instantiated as follows:
 ```
@@ -77,9 +77,10 @@ emulator = GPEmul(X_train, y_train)
 Additional keyword arguments with default values are:
 * `device=torch.device("cuda" if torch.cuda.is_available() else "cpu")`
 * `learn_noise=False`
-* `scale_data=True`
+* `kernel="RBF"`
+* `log_transform=False`
 
-By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardised before the training. To disable this option simply set `scale_data` to `False`.
+By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardised before the training. You can use a less smooth kernel by setting `kernel` to `"Matern"`. Also, you can log-transform the data (useful if you have spotted an exponential trend) by setting `log_transform` to `True`.
 
 The training is performed via the command:
 ```
