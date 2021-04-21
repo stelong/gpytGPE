@@ -80,7 +80,7 @@ Additional keyword arguments with default values are:
 * `kernel="RBF"`
 * `log_transform=False`
 
-By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). Data are automatically standardised before the training. You can use a less smooth kernel by setting `kernel` to `"Matern"`. Also, you can log-transform the data (useful if you have spotted an exponential trend) by setting `log_transform` to `True`.
+By changing `learn_noise` to `True`, you can easily switch to a noisy formulation (an additional hyperparameter will be fitted, correspondig to the standard deviation of a zero-mean normal distribution). You can use a less smooth kernel by setting `kernel` to `"Matern"`. Also, you can log-transform the data (useful if you have spotted an exponential trend) by setting `log_transform` to `True`.
 
 The training is performed via the command:
 ```
@@ -93,9 +93,9 @@ Additional keyword arguments with default values are:
 * `patience=20`
 * `savepath="./"`
 * `save_losses=False`
-* `watch_metric="R2Score"`
+* `watch_metric=torchmetrics.R2Score()`
 
-`learning_rate` is a tuning parameter for the employed *Adam* optimization algorithm that determines the step size at each iteration while moving toward a minimum of the loss function. `max_epochs` is the maximum number of allowed epochs (iterations) in the training loop. `n_restarts` is the number of times you want to repeat the optimization algorithm starting from a different point in the hyperparameter high-dimensional space. `patience` is the maximum number of epochs you want to wait without seeing any improvement on the validation loss (if called as above: `emulator.train(X_val, y_val)`) or on the training loss (if called with empty arguments: `emulator.train([], [])`). `savepath` is the absolute path where the code will store training `checkpoint.pth` files and the final trained emulator object `gpe.pth`. To output figures of monitored quantities such as training loss, validation loss and metric of interest over epochs, set `save_losses` to `True`. `watch_metric` can be set to any metric name chosen among the available ones (currently `"MAPE"`, `"MSE"`, `"R2Score"`).
+`learning_rate` is a tuning parameter for the employed *Adam* optimization algorithm that determines the step size at each iteration while moving toward a minimum of the loss function. `max_epochs` is the maximum number of allowed epochs (iterations) in the training loop. `n_restarts` is the number of times you want to repeat the optimization algorithm starting from a different point in the hyperparameter high-dimensional space. `patience` is the maximum number of epochs you want to wait without seeing any improvement on the validation loss (if called as above: `emulator.train(X_val, y_val)`) or on the training loss (if called with empty arguments: `emulator.train([], [])`). `savepath` is the absolute path where the code will store training `checkpoint.pth` files and the final trained emulator object `gpe.pth`. To output figures of monitored quantities such as training loss, validation loss and metric of interest over epochs, set `save_losses` to `True`. `watch_metric` can be set to any metric object chosen among the available regression metrics provided by Torchmetrics.
 
 Finally, the trained emulator object can be saved as:
 ```
@@ -118,11 +118,12 @@ The returned vectors have shape `(X_test.shape[0],)`.
 
 To check to emulator accuracy, you can evaluate the chosen metric function at the true and predicted values:
 ```
-from gpytGPE.utils.metrics import R2Score
+from torchmetrics import R2Score
 
-print( R2Score(emulator.tensorize(y_test), emulator.tensorize(y_predicted_mean)) )
+scorer = R2Score()
+print( scorer(emulator.tensorize(y_predicted_mean), emulator.tensorize(y_test)) )
 ```
-Notice that you have to first make the `numpy.ndarray` vectors be tensors because of the metric function being specifically written for `torch` tensors.
+Notice that you have to first make the `numpy.ndarray` vectors be tensors because of the metric function works with `torch` tensors.
 
 It is also possible to draw samples from the emulator full posterior distribution via the `sample` command:
 ```
