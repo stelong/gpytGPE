@@ -6,6 +6,8 @@
 #
 cycler==0.10.0
     # via matplotlib
+decorator==4.4.2
+    # via networkx
 future==0.18.2
     # via torch
 gpytorch==1.1.1
@@ -19,6 +21,8 @@ matplotlib==3.3.4
     #   -r requirements.in
     #   salib
     #   seaborn
+networkx==2.5.1
+    # via -r requirements.in
 numpy==1.20.1
     # via
     #   -r requirements.in
