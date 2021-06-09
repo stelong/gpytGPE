@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 from gpytGPE.utils.design import read_labels
-from gpytGPE.utils.plotting import correct
+from gpytGPE.utils.plotting import correct_index
 
 CRITERION = "STi"  # possible choices are: "Si", "STi"
 EMUL_TYPE = "full"  # possible choices are: "full", "best"
