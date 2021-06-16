@@ -68,7 +68,7 @@ def interp_col(color, n):
     return lsc
 
 
-def check_distr_previously(A, threshold):
+def check_distr_mean(A, threshold):
     mean = []
     std = []
     for a in A.T:
@@ -81,7 +81,7 @@ def check_distr_previously(A, threshold):
     return l
 
 
-def check_distr(A, threshold):
+def check_distr_lquart(A, threshold):
     lower_quartile = []
     for a in A.T:
         lower_quartile.append(np.percentile(a, 25))
@@ -92,8 +92,17 @@ def check_distr(A, threshold):
     return l
 
 
-def correct_index(A, threshold):
-    l = check_distr(A, threshold)
+def correct_index(
+    A, threshold, criterion="mean"
+):  # NOTE: when using criterion="lquart", np.median has to be used instead of np.mean in gsa_donut, gsa_heat, gsa_network
+    if criterion == "mean":
+        l = check_distr_mean(A, threshold)
+    elif criterion == "lquart":
+        l = check_distr_lquart(A, threshold)
+    else:
+        raise ValueError(
+            "Not a valid criterion! Available criteria are: 'mean' or 'lquart'."
+        )
     A[:, l] = np.zeros((A.shape[0], len(l)), dtype=float)
     return A
 
