@@ -58,7 +58,7 @@ def main():
             path += f"{best_split}/"
 
         S = np.loadtxt(path + criterion + ".txt", dtype=float)
-        S = correct(S, thre)
+        S = correct_index(S, thre)
 
         mean = np.array([S[:, i].mean() for i in range(len(index_i))])
         ls = list(np.argsort(mean))
