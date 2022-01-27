@@ -31,7 +31,6 @@ numpy==1.22.1
     #   scipy
     #   seaborn
     #   torch
-    #   torchvision
 packaging==21.3
     # via matplotlib
 pandas==1.4.0
@@ -40,9 +39,7 @@ pandas==1.4.0
     #   salib
     #   seaborn
 pillow==9.0.0
-    # via
-    #   matplotlib
-    #   torchvision
+    # via matplotlib
 pyparsing==3.0.7
     # via
     #   matplotlib
@@ -73,14 +70,8 @@ torch==1.7.1
     # via
     #   -r requirements.in
     #   gpytorch
-    #   torchaudio
     #   torchmetrics
-    #   torchvision
-torchaudio==0.7.2
-    # via -r requirements.in
 torchmetrics==0.2.0
-    # via -r requirements.in
-torchvision==0.8.2
     # via -r requirements.in
 typing-extensions==4.0.1
     # via torch
